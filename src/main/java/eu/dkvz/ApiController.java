@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import eu.dkvz.BlogAuthoring.model.*;
+import eu.dkvz.api.NotFoundException;
 
 @Controller
 public class ApiController {
@@ -24,7 +25,18 @@ public class ApiController {
 	@RequestMapping("/test")
 	@ResponseBody
 	public List<ArticleTag> testing() {
-		return blogDataAccess.getAllTags();
+		return blogDataAccess.getTagsForArticle(31);
+	}
+	
+	@RequestMapping("/gimmemap")
+	@ResponseBody
+	public Map<String, Object> giveMap() {
+		Article art = blogDataAccess.getArticleById(31);
+		if (art == null) {
+			throw new NotFoundException();
+		} else {
+			return art.toMap();
+		}
 	}
 	
 }
