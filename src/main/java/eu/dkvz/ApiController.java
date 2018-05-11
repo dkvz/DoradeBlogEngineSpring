@@ -7,7 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import eu.dkvz.BlogAuthoring.model.BlogDataAccessSpring;
+import eu.dkvz.BlogAuthoring.model.*;
 
 @Controller
 public class ApiController {
@@ -20,5 +20,11 @@ public class ApiController {
     public String index() {
     	return "Nothing here";
     }
+	
+	@RequestMapping("/test")
+	@ResponseBody
+	public List<ArticleTag> testing() {
+		return blogDataAccess.getAllTags();
+	}
 	
 }

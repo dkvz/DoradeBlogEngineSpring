@@ -4,6 +4,7 @@ import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -28,7 +29,7 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 	@Override
 	public boolean isConnected() throws DataAccessException {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
@@ -45,8 +46,9 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 
 	@Override
 	public List<ArticleTag> getAllTags() throws DataAccessException {
-		// TODO Auto-generated method stub
-		return null;
+		List<ArticleTag> tags = jdbcTpl.query("SELECT * FROM tags", 
+				new BeanPropertyRowMapper<ArticleTag>(ArticleTag.class));
+		return tags;
 	}
 
 	@Override
