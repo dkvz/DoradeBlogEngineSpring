@@ -24,18 +24,29 @@ public class ApiController {
 	
 	@RequestMapping("/test")
 	@ResponseBody
-	public List<ArticleTag> testing() {
-		return blogDataAccess.getTagsForArticle(31);
+	public User testing() {
+		return blogDataAccess.getUser(1);
 	}
 	
 	@RequestMapping("/gimmemap")
 	@ResponseBody
 	public Map<String, Object> giveMap() {
-		Article art = blogDataAccess.getArticleById(31);
+		Article art = blogDataAccess.getArticleById(130);
 		if (art == null) {
 			throw new NotFoundException();
 		} else {
 			return art.toMap();
+		}
+	}
+	
+	@RequestMapping("/articleList")
+	@ResponseBody
+	public List<ArticleSummary> articleList() {
+		List<ArticleSummary> sums = blogDataAccess.getArticleSummariesDescFromTo(0, 5, "");
+		if (sums != null && sums.size() > 0) {
+			return sums;
+		} else {
+			return new ArrayList<ArticleSummary>();
 		}
 	}
 	
