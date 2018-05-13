@@ -16,7 +16,16 @@ GET		/gimme-sitemap/		controllers.Application.sitemap(articlesRoot: String)
 GET /last-comment controllers.Application.lastComment
 ```
 
-## 
+## GET /articles-starting-from/:articleId
+Args:
+* max ; default 30
+* tags ; default ""
+* order ; default "desc"
+
+## GET /shorts-starting-from/:articleId
+Same endpoint as above but for shorts.
 
 # TODO
 * The spring-boot-devtools dependency is nice but I should check what "optional" means and if it does anything when building to prod.
+* What happens if you don't use an integer in /articles-starting-from/{articleId}?
+* Try to create a SQL error to see if the @ExceptionHandler thingy is working.
