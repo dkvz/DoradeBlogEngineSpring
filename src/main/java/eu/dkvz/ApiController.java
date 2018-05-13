@@ -31,7 +31,7 @@ public class ApiController {
 	@RequestMapping("/gimmemap")
 	@ResponseBody
 	public Map<String, Object> giveMap() {
-		Article art = blogDataAccess.getArticleById(130);
+		Article art = blogDataAccess.getArticleById(52);
 		if (art == null) {
 			throw new NotFoundException();
 		} else {
@@ -42,12 +42,23 @@ public class ApiController {
 	@RequestMapping("/articleList")
 	@ResponseBody
 	public List<ArticleSummary> articleList() {
-		List<ArticleSummary> sums = blogDataAccess.getArticleSummariesDescFromTo(0, 5, "");
+		List<ArticleSummary> sums = blogDataAccess.getArticleSummariesDescFromTo(0, 5, false, "");
 		if (sums != null && sums.size() > 0) {
 			return sums;
 		} else {
 			return new ArrayList<ArticleSummary>();
 		}
+	}
+	
+	@RequestMapping("/mapList")
+	@ResponseBody
+	public List<Map<String, Object>> mapList() {
+		List<ArticleSummary> sums = blogDataAccess.getArticleSummariesDescFromTo(0, 5, false, "");
+		List<Map<String, Object>> ret = new ArrayList<Map<String, Object>>();
+		if (sums != null && sums.size() > 0) {
+			sums.forEach(i -> ret.add(i.toMap()));
+		}
+		return ret;
 	}
 	
 }

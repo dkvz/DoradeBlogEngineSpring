@@ -46,7 +46,7 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 	 * I mean I know why, I was watching a show and copy pasting.
 	 */
 	@Override
-	public List<ArticleSummary> getArticleSummariesDescFromTo(long start, int count, String tags) throws DataAccessException {
+	public List<ArticleSummary> getArticleSummariesDescFromTo(long start, int count, boolean isShort, String tags) throws DataAccessException {
 		if (start < 0) {
             start = 0;
         }
@@ -57,6 +57,7 @@ public class BlogDataAccessSpring extends BlogDataAccess {
                 + "articles.article_url, articles.thumb_image, articles.date, "
                 + "articles.user_id, articles.summary, articles.published FROM articles ";
         String[] tagsA = null;
+        List<Object> args = new ArrayList<>();
         if (tags != null && !tags.isEmpty()) {
             sql = sql.concat(", article_tags, tags WHERE");
             boolean firstAnd = true;
@@ -73,17 +74,19 @@ public class BlogDataAccessSpring extends BlogDataAccess {
             if (!firstAnd) {
                 sql = sql.concat(" AND");
             }
+            args.addAll(Arrays.asList(tagsA));
             sql = sql.concat(" (tags.id = article_tags.tag_id AND "
-                    + "article_tags.article_id = articles.id) ");
+                    + "article_tags.article_id = articles.id) "
+                    + "AND articles.short = ? ");
+        } else {
+        	sql = sql.concat(" WHERE articles.short = ? ");
         }
+        if (isShort) args.add(1);
+        else args.add(0);
         if (count < 1) {
             sql = sql.concat("ORDER BY articles.id DESC");
         } else {
             sql = sql.concat("ORDER BY articles.id DESC LIMIT ? OFFSET ?");
-        }
-        List<Object> args = new ArrayList<>();
-        if (tagsA != null && tagsA.length > 0) {
-            args.addAll(Arrays.asList(tagsA));
         }
         if (count >= 1) {
             args.add(count); // LIMIT clause value
@@ -183,7 +186,12 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 		// Just a reminder: casting null into anything won't raise an exception.
 		sum.setArticleURL((String)res.get("article_url"));
 		// I should include the author in the query:
-		sum.setAuthor((String)res.get("author_name"));
+		String author = "Anonymous";
+		User usr = this.getUser((int)res.get("user_id"));
+		if (usr != null) {
+			author = usr.getName();
+		}
+		sum.setAuthor(author);
 		sum.setId(id);
 		sum.setCommentsCount(this.getCommentCount(id));
 		// TODO I need to log the date because it's wrong somehow.

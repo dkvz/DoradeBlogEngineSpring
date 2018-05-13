@@ -67,7 +67,7 @@ public class BlogDataAccessSQLite extends BlogDataAccess {
     }
 
     @Override
-    public List<ArticleSummary> getArticleSummariesDescFromTo(long start, int count, String tags) throws SQLException {
+    public List<ArticleSummary> getArticleSummariesDescFromTo(long start, int count, boolean isShort, String tags) throws SQLException {
         List<ArticleSummary> res = new ArrayList<>();
         if (start < 0) {
             start = 0;

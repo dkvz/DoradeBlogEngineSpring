@@ -18,7 +18,7 @@ public abstract class BlogDataAccess {
     public abstract void disconnect() throws Exception;
     public abstract boolean isConnected() throws Exception;
     public abstract User getUser(long id) throws Exception;
-    public abstract List<ArticleSummary> getArticleSummariesDescFromTo(long start, int count, String tags) throws Exception;
+    public abstract List<ArticleSummary> getArticleSummariesDescFromTo(long start, int count, boolean isShort, String tags) throws Exception;
     public abstract List<ArticleTag> getAllTags() throws Exception;
     public abstract long getCommentCount(long articleID) throws Exception;
     public abstract long getArticleCount(boolean published, String tags) throws Exception;
