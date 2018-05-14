@@ -1,5 +1,7 @@
 package eu.dkvz.BlogAuthoring.model;
 
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -245,6 +247,14 @@ public class BlogDataAccessSpring {
 		} catch (IncorrectResultSizeDataAccessException ex) {
 			return null;
 		}
+	}
+	
+	public Article getArticleByUrl(String articleUrl) throws DataAccessException {
+		long artId = this.getArticleIdFromUrl(articleUrl);
+		if (artId > 0) {
+			return this.getArticleById(artId);
+		}
+		return null;
 	}
 	
 	private ArticleSummary processArticleSummaryRow(Map<String, Object> res, long id) {

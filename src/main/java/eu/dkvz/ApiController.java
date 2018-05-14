@@ -47,6 +47,14 @@ public class ApiController {
 		}
 	}
 	
+	@RequestMapping("/article/{articleUrl}")
+	@ResponseBody
+	public Map<String, Object> getArticle(@PathVariable String articleUrl) {
+		
+		
+		return null;
+	}
+	
 	@RequestMapping("/articles-starting-from/{articleId}")
 	@ResponseBody
 	public List<Map<String, Object>> articlesStartingFrom(@PathVariable long articleId,
