@@ -28,6 +28,17 @@ Same endpoint as above but for shorts.
 ## GET /article/:articleUrl
 I'm going to return a 404 if it doesn't exist but I'm not sure what was happening with the other service.
 
+## GET /comments-starting-from/:articleUrl
+Args:
+* start ; default 0
+* max ; default 30
+
+## GET /tags
+The endpoint to get the list of available tags.
+
+## POST /comments
+
+
 # TODO
 * The spring-boot-devtools dependency is nice but I should check what "optional" means and if it does anything when building to prod.
 * What happens if you don't use an integer in /articles-starting-from/{articleId}?

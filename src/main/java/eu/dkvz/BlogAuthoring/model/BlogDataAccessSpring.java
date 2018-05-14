@@ -167,7 +167,7 @@ public class BlogDataAccessSpring {
 	}
 
 	public List<ArticleTag> getAllTags() throws DataAccessException {
-		List<ArticleTag> tags = jdbcTpl.query("SELECT * FROM tags", 
+		List<ArticleTag> tags = jdbcTpl.query("SELECT * FROM tags ORDER BY name ASC", 
 				new BeanPropertyRowMapper<ArticleTag>(ArticleTag.class));
 		return tags;
 	}
