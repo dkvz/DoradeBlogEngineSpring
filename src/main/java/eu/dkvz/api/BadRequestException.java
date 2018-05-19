@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class BadRequestException extends RuntimeException {
 
 	
-	private String message;
+	private final String message;
 	
 	/**
 	 * 
@@ -27,5 +27,9 @@ public class BadRequestException extends RuntimeException {
 		return message;
 	}
 	
+	@Override
+	public String toString() {
+		return message;
+	}
 	
 }

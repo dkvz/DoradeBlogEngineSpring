@@ -108,6 +108,24 @@ public class ApiController {
     	}
 	}
 	
+	@RequestMapping(value="/gimme-sitemap", produces="application/xml")
+	@ResponseBody
+	public String getSitemap(@RequestParam(value="articlesRoot", defaultValue="") String articlesRoot) {
+		List<ArticleSummary> articles = blogDataAccess.getArticleSummariesDescFromTo(0, Integer.MAX_VALUE, "", "desc");
+		String sitemap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    	sitemap = sitemap.concat("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
+    	String baseRoot = "https://" + articlesRoot + "/";
+		if (articles != null && articles.size() > 0) {
+	    	for (ArticleSummary sum : articles) {
+	    		sitemap = sitemap.concat("\t<url>\n");
+	    		sitemap = sitemap.concat("\t\t<loc>" + baseRoot.concat(sum.getArticleURL()) + "</loc>\n");
+	    		sitemap = sitemap.concat("\t</url>\n");
+	    	}
+		}
+		sitemap = sitemap.concat("</urlset>");
+		return sitemap;
+	}
+	
 	@RequestMapping("/tags")
 	@ResponseBody
 	public List<Map<String, Object>> getTags() {
@@ -122,25 +140,25 @@ public class ApiController {
 			throw new NotFoundException();
 		}
 	}
-	
-	// The endpoint is supposed to just respond with the String "OK" if it worked.
-	// I love how I designed this thing.
+
+	// I love how I designed this thing (sarcasm).
+	// Also the name of the articleId is not in CamelCase. Sorry.
 	@RequestMapping(value="/comments", method=RequestMethod.POST, consumes=MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	@ResponseBody
-	public String saveComment(String comment, String author, String articleId, String articleurl, 
+	public Map<String, Object> saveComment(String comment, String author, String article_id, String articleurl, 
 			HttpServletRequest request) {
 		// TODO Escape everything HTML
 		// TODO Strip comment that is too long
 		// TODO Check that the article exists first
 		// TODO Parse numeric articleId or use articleurl (yes, written like that)
 		// Any absent argument will be set to null.
-		if (comment != null && (articleId != null || articleurl != null) && 
+		if (comment != null && (article_id != null || articleurl != null) && 
 				(author != null && author.replace(" ", "").length() > 0)) {
 			
 			Comment com = new Comment();
-			if (articleId != null) {
+			if (article_id != null) {
 				try {
-					com.setArticleId(Long.parseLong(articleId));
+					com.setArticleId(Long.parseLong(article_id));
 				} catch (NumberFormatException ex) {
 					throw new BadRequestException("Malformed article ID");
 				}
@@ -165,7 +183,7 @@ public class ApiController {
 			com.setClientIP(request.getRemoteAddr());
 			com.setDate(new java.util.Date());
 			blogDataAccess.insertComment(com);
-			return "OK";
+			return com.toReducedMap();
 		}
 		throw new BadRequestException("Missing arguments");
 	}

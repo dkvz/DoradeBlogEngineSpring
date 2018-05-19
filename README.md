@@ -37,7 +37,17 @@ Args:
 The endpoint to get the list of available tags.
 
 ## POST /comments
+Works like the original. Which is kind of weird.
 
+Only difference is that it throws Bad Request exceptions instead of only 500. It can still send a 500 in case of a database issue.
+
+Used to return the string "OK" if the insert worked. Spring boot inserts this in an HMTL page.
+So I changed it to return the comment in JSON form.
+
+Requires a body in form-www-urlencoded format, with either "articleurl" or "article_id" as the way to link an article to the comment.
+
+## GET /gimme-sitemap
+Expects a query parameter called "articlesRoot" which is the domain name root for the site map without http:// and with no trailing slash.
 
 # TODO
 * The spring-boot-devtools dependency is nice but I should check what "optional" means and if it does anything when building to prod.
