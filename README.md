@@ -49,6 +49,11 @@ Requires a body in form-www-urlencoded format, with either "articleurl" or "arti
 ## GET /gimme-sitemap
 Expects a query parameter called "articlesRoot" which is the domain name root for the site map without http:// and with no trailing slash.
 
+By default my XML-in-a-string was returned inside an HTML body. I had to specify the content-type for it to work.
+
+## GET /last-comment
+Very simple.
+
 # TODO
 * The spring-boot-devtools dependency is nice but I should check what "optional" means and if it does anything when building to prod.
 * What happens if you don't use an integer in /articles-starting-from/{articleId}?

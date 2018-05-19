@@ -188,6 +188,17 @@ public class ApiController {
 		throw new BadRequestException("Missing arguments");
 	}
 	
+	@RequestMapping("/last-comment")
+	@ResponseBody
+	public Map<String, Object> getLastComment() {
+		Comment lastCom = blogDataAccess.getLastComment();
+		if (lastCom != null) {
+			return lastCom.toReducedMap();
+		} else {
+			throw new NotFoundException();
+		}
+	}
+	
 	public List<Map<String, Object>> getArticlesOrShortsStartingFrom(long articleId, int max, String tags, String order, boolean isShort) {
 		if (max > 100) {
     		max = 30;
