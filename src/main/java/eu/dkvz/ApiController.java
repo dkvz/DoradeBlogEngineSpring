@@ -11,6 +11,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,37 +32,34 @@ public class ApiController {
 	@Autowired
     public BlogDataAccessSpring blogDataAccess;
 	
+	@CrossOrigin(origins = "*")
 	@RequestMapping("/")
     @ResponseBody
     public String index() {
     	return "Nothing here";
     }
 	
-	@RequestMapping("/test/{kakor}")
-	@ResponseBody
-	public String testing(@PathVariable String kakor, @RequestParam(value="cake", defaultValue="World") String cake) {
-		return kakor + " ; " + cake;
-	}
-	
-	@RequestMapping("/gimmemap")
-	@ResponseBody
-	public Map<String, Object> giveMap() {
-		Article art = blogDataAccess.getArticleById(52);
-		if (art == null) {
-			throw new NotFoundException();
-		} else {
-			return art.toMap();
-		}
-	}
-	
+	@CrossOrigin(origins = "*")
 	@RequestMapping("/article/{articleUrl}")
 	@ResponseBody
 	public Map<String, Object> getArticle(@PathVariable String articleUrl) {
-		Article art = blogDataAccess.getArticleByUrl(articleUrl);
+		Article art = null; 
+		// Check if we got an article ID:
+		try {
+			long articleId = Long.parseLong(articleUrl);
+			if (articleId > 0l) {
+				art = blogDataAccess.getArticleById(articleId);
+			} else  {
+				art = blogDataAccess.getArticleByUrl(articleUrl);
+			}
+		} catch (NumberFormatException ex) {
+			art = blogDataAccess.getArticleByUrl(articleUrl);
+		}
 		if (art != null) return art.toMap();
 		else throw new NotFoundException();
 	}
 	
+	@CrossOrigin(origins = "*")
 	@RequestMapping("/articles-starting-from/{articleId}")
 	@ResponseBody
 	public List<Map<String, Object>> articlesStartingFrom(@PathVariable long articleId,
@@ -71,6 +69,7 @@ public class ApiController {
     	return this.getArticlesOrShortsStartingFrom(articleId, max, tags, order, false);
 	}
 	
+	@CrossOrigin(origins = "*")
 	@RequestMapping("/shorts-starting-from/{articleId}")
 	@ResponseBody
 	public List<Map<String, Object>> shortsStartingFrom(@PathVariable long articleId,
@@ -80,6 +79,7 @@ public class ApiController {
     	return this.getArticlesOrShortsStartingFrom(articleId, max, tags, order, true);
 	}
 	
+	@CrossOrigin(origins = "*")
 	@RequestMapping("/comments-starting-from/{articleUrl}")
 	@ResponseBody
 	public List<Map<String, Object>> commentsStartingFrom(@PathVariable String articleUrl, 
@@ -126,6 +126,7 @@ public class ApiController {
 		return sitemap;
 	}
 	
+	@CrossOrigin(origins = "*")
 	@RequestMapping("/tags")
 	@ResponseBody
 	public List<Map<String, Object>> getTags() {
@@ -143,6 +144,7 @@ public class ApiController {
 
 	// I love how I designed this thing (sarcasm).
 	// Also the name of the articleId is not in CamelCase. Sorry.
+	@CrossOrigin(origins = "*")
 	@RequestMapping(value="/comments", method=RequestMethod.POST, consumes=MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	@ResponseBody
 	public Map<String, Object> saveComment(String comment, String author, String article_id, String articleurl, 
@@ -165,7 +167,7 @@ public class ApiController {
 			} else {
 				// Using articleurl:
 				long artId = blogDataAccess.getArticleIdFromUrl(articleurl);
-				if (artId > 0) {
+				if (artId > 0l) {
 					com.setArticleId(artId);
 				} else {
 					throw new BadRequestException("Invalid article URL");
@@ -188,6 +190,7 @@ public class ApiController {
 		throw new BadRequestException("Missing arguments");
 	}
 	
+	@CrossOrigin(origins = "*")
 	@RequestMapping("/last-comment")
 	@ResponseBody
 	public Map<String, Object> getLastComment() {
