@@ -1,7 +1,5 @@
 package eu.dkvz.BlogAuthoring.model;
 
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
