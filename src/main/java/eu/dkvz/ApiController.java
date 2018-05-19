@@ -9,20 +9,24 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.util.HtmlUtils;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import eu.dkvz.BlogAuthoring.model.*;
-import eu.dkvz.api.NotFoundException;
+import eu.dkvz.api.*;
 
 @Controller
 public class ApiController {
+	
+	public static final int MAX_COMMENT_LENGTH = 2000;
+	public static final int MAX_AUTHOR_LENGTH = 70;
 	
 	@Autowired
     public BlogDataAccessSpring blogDataAccess;
@@ -119,15 +123,51 @@ public class ApiController {
 		}
 	}
 	
-	@RequestMapping(value="/comments", method=RequestMethod.POST)
+	// The endpoint is supposed to just respond with the String "OK" if it worked.
+	// I love how I designed this thing.
+	@RequestMapping(value="/comments", method=RequestMethod.POST, consumes=MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	@ResponseBody
-	public Map<String, Object> saveComment(@RequestBody Comment comment, HttpServletRequest request) {
+	public String saveComment(String comment, String author, String articleId, String articleurl, 
+			HttpServletRequest request) {
 		// TODO Escape everything HTML
 		// TODO Strip comment that is too long
 		// TODO Check that the article exists first
-		comment.setClientIP(request.getRemoteAddr());
-		comment.setDate(new java.util.Date());
-		return comment.toReducedMap();
+		// TODO Parse numeric articleId or use articleurl (yes, written like that)
+		// Any absent argument will be set to null.
+		if (comment != null && (articleId != null || articleurl != null) && 
+				(author != null && author.replace(" ", "").length() > 0)) {
+			
+			Comment com = new Comment();
+			if (articleId != null) {
+				try {
+					com.setArticleId(Long.parseLong(articleId));
+				} catch (NumberFormatException ex) {
+					throw new BadRequestException("Malformed article ID");
+				}
+			} else {
+				// Using articleurl:
+				long artId = blogDataAccess.getArticleIdFromUrl(articleurl);
+				if (artId > 0) {
+					com.setArticleId(artId);
+				} else {
+					throw new BadRequestException("Invalid article URL");
+				}
+			}
+			if (author.length() > ApiController.MAX_AUTHOR_LENGTH) {
+				author = author.substring(0, ApiController.MAX_AUTHOR_LENGTH);
+			}
+			com.setAuthor(author);
+			// Reduce comment to some arbitrary max length.
+			if (comment.length() > ApiController.MAX_COMMENT_LENGTH) {
+				comment = comment.substring(0, ApiController.MAX_COMMENT_LENGTH);
+			}
+			com.setComment(comment);
+			com.setClientIP(request.getRemoteAddr());
+			com.setDate(new java.util.Date());
+			blogDataAccess.insertComment(com);
+			return "OK";
+		}
+		throw new BadRequestException("Missing arguments");
 	}
 	
 	public List<Map<String, Object>> getArticlesOrShortsStartingFrom(long articleId, int max, String tags, String order, boolean isShort) {
