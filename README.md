@@ -54,6 +54,12 @@ By default my XML-in-a-string was returned inside an HTML body. I had to specify
 ## GET /last-comment
 Very simple.
 
+## GET /render-article/:articleUrl
+Creates a prerendered HTML page for social media site robots complete with Open Graph meta tags and the full article content (bar the table of content).
+
+Will generate URI for "shorts" if the article ID is numeric, otherwise the item will be seen as an "article".
+
+
 # TODO
 * The spring-boot-devtools dependency is nice but I should check what "optional" means and if it does anything when building to prod.
 * What happens if you don't use an integer in /articles-starting-from/{articleId}?

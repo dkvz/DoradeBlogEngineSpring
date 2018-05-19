@@ -28,6 +28,11 @@ public class ApiController {
 	
 	public static final int MAX_COMMENT_LENGTH = 2000;
 	public static final int MAX_AUTHOR_LENGTH = 70;
+	// This is used for the article rendering:
+	public static final String SITE_TITLE = "Blog des gens compliqués";
+	public static final String SITE_ROOT = "https://dkvz.eu";
+	public static final String SITE_ARTICLES_ROOT = "articles";
+	public static final String SITE_SHORTS_ROOT = "breves";
 	
 	@Autowired
     public BlogDataAccessSpring blogDataAccess;
@@ -57,6 +62,43 @@ public class ApiController {
 		}
 		if (art != null) return art.toMap();
 		else throw new NotFoundException();
+	}
+	
+	@RequestMapping("/render-article/{articleUrl}")
+	public String renderArticle(@PathVariable String articleUrl, Map<String, Object> model) {
+		Article art = null;
+		// Check if we got an article ID:
+		// Never refactor this lel
+		try {
+			long articleId = Long.parseLong(articleUrl);
+			if (articleId > 0l) {
+				art = blogDataAccess.getArticleById(articleId);
+				// We need to change the article URL if using numeric ID.
+				model.put("siteArticlesRoot", ApiController.SITE_SHORTS_ROOT);
+				art.getArticleSummary().setArticleURL(Long.toString(articleId));
+			} else  {
+				art = blogDataAccess.getArticleByUrl(articleUrl);
+				model.put("siteArticlesRoot", ApiController.SITE_ARTICLES_ROOT);
+			}
+		} catch (NumberFormatException ex) {
+			art = blogDataAccess.getArticleByUrl(articleUrl);
+			model.put("siteArticlesRoot", ApiController.SITE_ARTICLES_ROOT);
+		}
+		if (art == null) throw new NotFoundException();
+		model.put("article", art);
+		model.put("siteTitle", ApiController.SITE_TITLE);
+		model.put("siteRoot", ApiController.SITE_ROOT);
+		// We need to check if the thumbImage requires adding the
+		// website root to it:
+		if (art.getArticleSummary().getThumbImage() != null 
+				&& art.getArticleSummary().getThumbImage().length() > 0) {
+			if (!art.getArticleSummary().getThumbImage().contains("://")) {
+				art.getArticleSummary().setThumbImage(
+						ApiController.SITE_ROOT.concat(art.getArticleSummary().getThumbImage())
+				);
+			}
+		}
+		return "article";
 	}
 	
 	@CrossOrigin(origins = "*")
@@ -149,10 +191,6 @@ public class ApiController {
 	@ResponseBody
 	public Map<String, Object> saveComment(String comment, String author, String article_id, String articleurl, 
 			HttpServletRequest request) {
-		// TODO Escape everything HTML
-		// TODO Strip comment that is too long
-		// TODO Check that the article exists first
-		// TODO Parse numeric articleId or use articleurl (yes, written like that)
 		// Any absent argument will be set to null.
 		if (comment != null && (article_id != null || articleurl != null) && 
 				(author != null && author.replace(" ", "").length() > 0)) {

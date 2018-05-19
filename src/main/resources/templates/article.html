@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" xmlns:th="http://www.thymeleaf.org">
+<head lang="en">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta property="og:title" th:content="${article.articleSummary.title}" content="Article Title" />
+  <meta property="og:description" content="Article provenant du blog des articles beaucoup trop longs" />
+  <meta property="og:url" th:content="${siteRoot} + '/' + ${siteArticlesRoot} + '/' + ${article.articleSummary.articleURL}" content="URL de l'article" />
+  <meta property="og:image" th:if="${article.articleSummary.thumbImage}" th:content="${article.articleSummary.thumbImage}" content="Thumbnail Image" />
+  <meta property="og:type" content="article" />
+  <meta property="og:article:author" th:content="${article.articleSummary.author}" content="Author" />
+  <meta property="og:article:published_time" th:content="${#dates.format(article.articleSummary.date, 'yyyy-MM-dd')}" content="Publication Date" />
+  <title th:text="${article.articleSummary.title} + ' | ' + ${siteTitle}">Article Title</title>
+</head>
+<body>
+  <h1 th:text="${article.articleSummary.title}">Article Title</h1>
+  <img th:if="${article.articleSummary.thumbImage}" th:src="${article.articleSummary.thumbImage}" />
+  <p th:text="'Posté le: ' + ${article.articleSummary.date}">Date de publication</p>
+  <p th:text="'Auteur: ' + ${article.articleSummary.author}">Auteur</p>
+  <hr />
+  <article th:utext="${article.content}">
+  	Article Content
+  </article>
+</body>
+</html>
