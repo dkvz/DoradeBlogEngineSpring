@@ -10,7 +10,11 @@
   <meta property="og:image" th:if="${article.articleSummary.thumbImage}" th:content="${article.articleSummary.thumbImage}" content="Thumbnail Image" />
   <meta property="og:type" content="article" />
   <meta property="article:author" th:content="${article.articleSummary.author}" content="Author" />
+  <link rel="author" th:href="${article.articleSummary.author}" href="Author">
+  <meta property="author" th:content="${article.articleSummary.author}" content="Author">
   <meta property="article:published_time" th:content="${#dates.format(article.articleSummary.date, 'yyyy-MM-dd')}" content="Publication Date" />
+  <meta property="og:site_name" content="dkvz.eu" />
+  <meta name="description" content="Blog expérimental d'un humble consultant en progress-bars.">
   <title th:text="${article.articleSummary.title} + ' | ' + ${siteTitle}">Article Title</title>
 </head>
 <body>
