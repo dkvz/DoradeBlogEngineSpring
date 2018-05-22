@@ -1,6 +1,28 @@
-Database not included. I think.
+# Dorade Blog Engine
+REST API used by my blog, which is a single page web app.
 
-# Endpoints
+For some reasons it's completely independent from the actual web site and even responds on another domain name.
+
+## Open the project
+It's best to use the Spring Tool Suite. Clone the repository and import the folder in SpringToolSuite.
+
+## The database
+I may not have included the SQLite database. Project won't work without it.
+
+I'll fix this one day maybe.
+
+## Creating the deployable jar
+Go to the project root directory and run:
+```
+./mvnw package
+```
+
+The produced jar is "executable". I might change that in the future though.
+
+## Deploying the jar
+I'm still figuring this out as my method using links and systemd has caused a server crash once. Also nobody will read this ever.
+
+## Endpoints
 Let's remake the API endpoints.
 
 Original routes code was as such:
@@ -22,21 +44,21 @@ Args:
 * tags ; default ""
 * order ; default "desc"
 
-## GET /shorts-starting-from/:articleId
+### GET /shorts-starting-from/:articleId
 Same endpoint as above but for shorts.
 
-## GET /article/:articleUrl
+### GET /article/:articleUrl
 I'm going to return a 404 if it doesn't exist but I'm not sure what was happening with the other service.
 
-## GET /comments-starting-from/:articleUrl
+### GET /comments-starting-from/:articleUrl
 Args:
 * start ; default 0
 * max ; default 30
 
-## GET /tags
+### GET /tags
 The endpoint to get the list of available tags.
 
-## POST /comments
+### POST /comments
 Works like the original. Which is kind of weird.
 
 Only difference is that it throws Bad Request exceptions instead of only 500. It can still send a 500 in case of a database issue.
@@ -46,21 +68,21 @@ So I changed it to return the comment in JSON form.
 
 Requires a body in form-www-urlencoded format, with either "articleurl" or "article_id" as the way to link an article to the comment.
 
-## GET /gimme-sitemap
+### GET /gimme-sitemap
 Expects a query parameter called "articlesRoot" which is the domain name root for the site map without http:// and with no trailing slash.
 
 By default my XML-in-a-string was returned inside an HTML body. I had to specify the content-type for it to work.
 
-## GET /last-comment
+### GET /last-comment
 Very simple.
 
-## GET /render-article/:articleUrl
+### GET /render-article/:articleUrl
 Creates a prerendered HTML page for social media site robots complete with Open Graph meta tags and the full article content (bar the table of content).
 
 Will generate URI for "shorts" if the article ID is numeric, otherwise the item will be seen as an "article".
-
 
 # TODO
 * The spring-boot-devtools dependency is nice but I should check what "optional" means and if it does anything when building to prod.
 * What happens if you don't use an integer in /articles-starting-from/{articleId}?
 * Change the favicon.
+* Add statistics such as the amount of views.

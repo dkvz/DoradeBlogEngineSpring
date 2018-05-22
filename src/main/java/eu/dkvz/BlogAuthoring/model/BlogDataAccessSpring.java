@@ -14,21 +14,6 @@ public class BlogDataAccessSpring {
 
 	@Autowired
     private JdbcTemplate jdbcTpl;
-	
-	public void connect() throws DataAccessException {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void disconnect() throws DataAccessException {
-		// TODO Auto-generated method stub
-
-	}
-
-	public boolean isConnected() throws DataAccessException {
-		// TODO Auto-generated method stub
-		return true;
-	}
 
 	public User getUser(long id) throws DataAccessException {
 		List<User> res = jdbcTpl.query("SELECT name, id FROM users WHERE id = ?", 
@@ -73,15 +58,15 @@ public class BlogDataAccessSpring {
             args.addAll(Arrays.asList(tagsA));
             sql = sql.concat(" (tags.id = article_tags.tag_id AND "
                     + "article_tags.article_id = articles.id) "
-                    + "AND articles.short = ? ");
+                    + "AND articles.short = ? AND articles.published = 1 ");
         } else {
-        	sql = sql.concat(" WHERE articles.short = ? ");
+        	sql = sql.concat(" WHERE articles.short = ? AND articles.published = 1 ");
         }
         args.add(1);
         if (order.toLowerCase().contains("asc")) {
-			sql = sql.concat("ORDER BY articles.id ASC");
+			sql = sql.concat(" ORDER BY articles.id ASC");
 		} else {
-			sql = sql.concat("ORDER BY articles.id DESC");
+			sql = sql.concat(" ORDER BY articles.id DESC");
 		}
         if (count >= 1) {
             sql = sql.concat(" LIMIT ? OFFSET ?");
@@ -136,9 +121,9 @@ public class BlogDataAccessSpring {
             args.addAll(Arrays.asList(tagsA));
             sql = sql.concat(" (tags.id = article_tags.tag_id AND "
                     + "article_tags.article_id = articles.id) "
-                    + "AND articles.short = ? ");
+                    + "AND articles.short = ? AND articles.published = 1 ");
         } else {
-        	sql = sql.concat(" WHERE articles.short = ? ");
+        	sql = sql.concat(" WHERE articles.short = ? AND articles.published = 1 ");
         }
         args.add(0);
         if (order.toLowerCase().contains("asc")) {
