@@ -220,7 +220,8 @@ public class ApiController {
 				comment = comment.substring(0, ApiController.MAX_COMMENT_LENGTH);
 			}
 			com.setComment(comment);
-			com.setClientIP(request.getRemoteAddr());
+			// This is crazy GDPR compliance:
+			com.setClientIP(IpUtils.extractFirstBytes(request.getRemoteAddr()));
 			com.setDate(new java.util.Date());
 			blogDataAccess.insertComment(com);
 			return com.toReducedMap();
