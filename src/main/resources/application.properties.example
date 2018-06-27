@@ -2,6 +2,3 @@
 spring.datasource.url=jdbc:sqlite:./db.sqlite
 spring.datasource.driver-class-name=org.sqlite.JDBC
 server.port=9001
-# Paths to resources used for statistics:
-geoip-path=/home/william/Projects/geoip-db/geolite2-city/GeoLite2-City.mmdb
-pseudos-path=/home/william/Projects/firstnames-db/words.txt
