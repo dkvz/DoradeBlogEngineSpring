@@ -86,3 +86,4 @@ Will generate URI for "shorts" if the article ID is numeric, otherwise the item 
 * What happens if you don't use an integer in /articles-starting-from/{articleId}?
 * Change the favicon.
 * Add statistics such as the amount of views.
+* The methods inserting stuff into the database could set the inserted id in the Java Bean that was inserted.

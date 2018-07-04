@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import eu.dkvz.BlogAuthoring.model.*;
 import eu.dkvz.api.*;
+import eu.dkvz.utils.IpUtils;
 
 @Controller
 public class ApiController {
@@ -36,6 +37,9 @@ public class ApiController {
 	@Autowired
     public BlogDataAccessSpring blogDataAccess;
 	
+	@Autowired
+	private ApiStatsService apiStatsService;
+	
 	@CrossOrigin(origins = "*")
 	@RequestMapping("/")
     @ResponseBody
@@ -46,7 +50,7 @@ public class ApiController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping("/article/{articleUrl}")
 	@ResponseBody
-	public Map<String, Object> getArticle(@PathVariable String articleUrl) {
+	public Map<String, Object> getArticle(@PathVariable String articleUrl, HttpServletRequest request) {
 		Article art = null; 
 		// Check if we got an article ID:
 		try {
@@ -59,6 +63,8 @@ public class ApiController {
 		} catch (NumberFormatException ex) {
 			art = blogDataAccess.getArticleByUrl(articleUrl);
 		}
+		// This is asynchronous by the magic of Spring magic.
+		apiStatsService.insertStats(request.getHeader("User-Agent"), request.getRemoteAddr(), art.getArticleSummary().getId());
 		if (art != null) return art.toMap();
 		else throw new NotFoundException();
 	}

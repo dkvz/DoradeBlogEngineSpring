@@ -1,4 +1,4 @@
-package eu.dkvz;
+package eu.dkvz.utils;
 
 public class IpUtils {
 

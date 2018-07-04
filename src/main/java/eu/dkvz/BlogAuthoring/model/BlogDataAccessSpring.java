@@ -374,4 +374,19 @@ public class BlogDataAccessSpring {
 		return null;
 	}
 	
+	public void insertArticleStat(ArticleStat stat) {
+		String sql = "INSERT INTO article_stats (article_id, pseudo_ua, pseudo_ip, geoip, client_ua, client_ip, date) VALUES (?, ?, ?, ?, ?, ?, ?)";
+		if (stat.getDate() == null) {
+			stat.setDate(new java.util.Date());
+		}
+		jdbcTpl.update(sql,
+				stat.getArticleId(),
+				stat.getPseudoUa(),
+				stat.getPseudoIp(),
+				stat.getGeoip(),
+				stat.getClientUa(),
+				stat.getClientIp(),
+				stat.getDate().getTime() / 1000);
+	}
+	
 }
