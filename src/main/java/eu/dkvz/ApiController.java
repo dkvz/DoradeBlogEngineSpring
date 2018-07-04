@@ -65,7 +65,7 @@ public class ApiController {
 		}
 		if (art != null) {
 			// This is asynchronous by the magic of Spring magic.
-			apiStatsService.insertStats(request.getHeader("User-Agent"), request.getRemoteAddr(), art.getArticleSummary().getId());
+			apiStatsService.insertStats(request.getHeader("User-Agent"), IpUtils.getRealIp(request), art.getArticleSummary().getId());
 			return art.toMap();
 		}
 		else throw new NotFoundException();
@@ -228,7 +228,7 @@ public class ApiController {
 			}
 			com.setComment(comment);
 			// This is crazy GDPR compliance:
-			com.setClientIP(IpUtils.extractFirstBytes(request.getRemoteAddr()));
+			com.setClientIP(IpUtils.extractFirstBytes(IpUtils.getRealIp(request)));
 			com.setDate(new java.util.Date());
 			blogDataAccess.insertComment(com);
 			return com.toReducedMap();
