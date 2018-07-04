@@ -11,6 +11,11 @@ I may not have included the SQLite database. Project won't work without it.
 
 I'll fix this one day maybe.
 
+## GeoIP database
+The app requires a GeoIP2 database to be present at the root of the project or it won't start.
+
+It has to be the "City" database, and I never tested with anything else than the free "GeoIP Lite" one.
+
 ## Creating the deployable jar
 Go to the project root directory and run:
 ```

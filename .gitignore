@@ -1,6 +1,7 @@
 /target/
 !.mvn/wrapper/maven-wrapper.jar
 db.sqlite
+GeoLite2-City.mmdb
 
 ### STS ###
 .apt_generated

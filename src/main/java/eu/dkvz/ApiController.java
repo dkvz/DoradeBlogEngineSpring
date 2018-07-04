@@ -63,9 +63,11 @@ public class ApiController {
 		} catch (NumberFormatException ex) {
 			art = blogDataAccess.getArticleByUrl(articleUrl);
 		}
-		// This is asynchronous by the magic of Spring magic.
-		apiStatsService.insertStats(request.getHeader("User-Agent"), request.getRemoteAddr(), art.getArticleSummary().getId());
-		if (art != null) return art.toMap();
+		if (art != null) {
+			// This is asynchronous by the magic of Spring magic.
+			apiStatsService.insertStats(request.getHeader("User-Agent"), request.getRemoteAddr(), art.getArticleSummary().getId());
+			return art.toMap();
+		}
 		else throw new NotFoundException();
 	}
 	

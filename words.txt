@@ -1,0 +1,1 @@
+../../firstnames-db/words.txt
