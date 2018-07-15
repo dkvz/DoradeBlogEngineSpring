@@ -10,7 +10,7 @@ public class ArticleStat {
 	private String pseudoIp;
 	private String clientUa;
 	private String clientIp;
-	private String geoip;
+	private GeoInfo geoInfo;
 	private Date date;
 	
 	public long getArticleId() {
@@ -55,13 +55,11 @@ public class ArticleStat {
 	public void setId(long id) {
 		this.id = id;
 	}
-	public String getGeoip() {
-		return geoip;
+	public GeoInfo getGeoInfo() {
+		return geoInfo;
 	}
-	public void setGeoip(String geoip) {
-		this.geoip = geoip;
+	public void setGeoInfo(GeoInfo geoInfo) {
+		this.geoInfo = geoInfo;
 	}
-
-	
-	
+		
 }

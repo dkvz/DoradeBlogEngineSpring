@@ -374,8 +374,8 @@ public class BlogDataAccessSpring {
 		return null;
 	}
 	
-	public void insertArticleStat(ArticleStat stat) {
-		String sql = "INSERT INTO article_stats (article_id, pseudo_ua, pseudo_ip, geoip, client_ua, client_ip, date) VALUES (?, ?, ?, ?, ?, ?, ?)";
+	public void insertArticleStat(ArticleStat stat) throws DataAccessException {
+		String sql = "INSERT INTO article_stats (article_id, pseudo_ua, pseudo_ip, country, region, city, client_ua, client_ip, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		if (stat.getDate() == null) {
 			stat.setDate(new java.util.Date());
 		}
@@ -383,7 +383,9 @@ public class BlogDataAccessSpring {
 				stat.getArticleId(),
 				stat.getPseudoUa(),
 				stat.getPseudoIp(),
-				stat.getGeoip(),
+				stat.getGeoInfo().getCountry(),
+				stat.getGeoInfo().getRegion(),
+				stat.getGeoInfo().getCity(),
 				stat.getClientUa(),
 				stat.getClientIp(),
 				stat.getDate().getTime() / 1000);

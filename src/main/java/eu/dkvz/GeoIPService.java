@@ -1,6 +1,7 @@
 package eu.dkvz;
 
 import java.io.*;
+import eu.dkvz.BlogAuthoring.model.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -32,32 +33,40 @@ public class GeoIPService {
 		}
 	}
 
-	public String getLocalization(String ip) {
+	public GeoInfo getLocalization(String ip) {
+		GeoInfo res = new GeoInfo();
 		if (this.geoReader != null) {
 			try {
 				InetAddress ipAddress = InetAddress.getByName(ip);
 				CityResponse response = geoReader.city(ipAddress);
-				String res = "";
+				// Apparently the info can be the actual string 'null'
+				// for some reason.
 				if (response.getCountry() != null) {
-					res += response.getCountry().getName() + " - ";
+					if (!response.getCountry().getName().equals("null")) {
+						res.setCountry(response.getCountry().getName());
+					}
 				}
 				if (response.getCity() != null) {
-					res += response.getCity().getName() + " - ";
+					if (!response.getCity().getName().equals("null")) {
+						res.setCity(response.getCity().getName());
+					}
 				}
 				//res += response.getPostal();
 				if (response.getMostSpecificSubdivision() != null) {
-					res += response.getMostSpecificSubdivision().getName();
+					if (!response.getMostSpecificSubdivision().getName().equals("null")) {
+						res.setRegion(response.getMostSpecificSubdivision().getName());
+					}
 				}
 				return res;
 			} catch (UnknownHostException ex) {
-				return "Unknown Host";
+				return res;
 			} catch (GeoIp2Exception ex) {
-				return "GeoIP Error";
+				return res;
 			} catch (IOException ex) {
-				return "IO Error";
+				return res;
 			}
 		} else {
-			return "GeoIP not loaded";
+			return res;
 		}
 	}
 	

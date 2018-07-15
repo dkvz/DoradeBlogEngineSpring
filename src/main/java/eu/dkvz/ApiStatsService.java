@@ -30,7 +30,7 @@ public class ApiStatsService {
 		stat.setArticleId(articleId);
 		stat.setClientIp(IpUtils.extractFirstBytes(clientIp));
 		stat.setClientUa(clientUa);
-		stat.setGeoip(geoipService.getLocalization(clientIp));
+		stat.setGeoInfo(geoipService.getLocalization(clientIp));
 		try {
 			stat.setPseudoIp(pseudonymiserService.hashAndFind(clientIp));
 			stat.setPseudoUa(pseudonymiserService.hashAndFind(clientUa));
@@ -40,7 +40,11 @@ public class ApiStatsService {
 			stat.setPseudoIp("");
 			stat.setPseudoUa(stat.getPseudoIp());
 		}
-		blogDataAccess.insertArticleStat(stat);
+		try {
+			blogDataAccess.insertArticleStat(stat);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 		return CompletableFuture.completedFuture(true);
 	}
 	
