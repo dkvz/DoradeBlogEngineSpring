@@ -39,23 +39,15 @@ public class GeoIPService {
 			try {
 				InetAddress ipAddress = InetAddress.getByName(ip);
 				CityResponse response = geoReader.city(ipAddress);
-				// Apparently the info can be the actual string 'null'
-				// for some reason.
 				if (response.getCountry() != null) {
-					if (!response.getCountry().getName().equals("null")) {
-						res.setCountry(response.getCountry().getName());
-					}
+					res.setCountry(response.getCountry().getName());
 				}
 				if (response.getCity() != null) {
-					if (!response.getCity().getName().equals("null")) {
-						res.setCity(response.getCity().getName());
-					}
+					res.setCity(response.getCity().getName());
 				}
 				//res += response.getPostal();
 				if (response.getMostSpecificSubdivision() != null) {
-					if (!response.getMostSpecificSubdivision().getName().equals("null")) {
-						res.setRegion(response.getMostSpecificSubdivision().getName());
-					}
+					res.setRegion(response.getMostSpecificSubdivision().getName());
 				}
 				return res;
 			} catch (UnknownHostException ex) {
