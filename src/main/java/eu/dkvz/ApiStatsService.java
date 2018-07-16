@@ -32,8 +32,8 @@ public class ApiStatsService {
 		stat.setClientUa(clientUa);
 		stat.setGeoInfo(geoipService.getLocalization(clientIp));
 		try {
-			stat.setPseudoIp(pseudonymiserService.hashAndFind(clientIp));
-			stat.setPseudoUa(pseudonymiserService.hashAndFind(clientUa));
+			stat.setPseudoIp(ApiStatsService.capitalizeFirstLetter(pseudonymiserService.hashAndFind(clientIp)));
+			stat.setPseudoUa(ApiStatsService.capitalizeFirstLetter(pseudonymiserService.hashAndFind(clientUa)));
 		} catch (Exception ex) {
 			// Could not pseudonymise, just don't insert anything there.
 			ex.printStackTrace();
@@ -46,6 +46,10 @@ public class ApiStatsService {
 			ex.printStackTrace();
 		}
 		return CompletableFuture.completedFuture(true);
+	}
+	
+	public static String capitalizeFirstLetter(String input) {
+		return input.substring(0, 1).toUpperCase() + input.substring(1);
 	}
 	
 }
