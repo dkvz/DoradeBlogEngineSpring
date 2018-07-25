@@ -4,10 +4,13 @@ import org.springframework.boot.json.*;
 import java.io.*;
 import java.util.*;
 import java.nio.file.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 public final class JsonDirImporter {
 
-private final File dir;
+	private final File dir;
+	private final SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ssZ");
 	
 	public JsonDirImporter(String path) {
 		this.dir = new File(path);
@@ -99,7 +102,25 @@ private final File dir;
 			if (parsed.get("summary") != null) {
 				art.setContent(parsed.get("summary").toString());
 			}
-			// We might have to parse a date. I know...
+			// We might have to parse a date. Sad face.
+			if (parsed.get("date") != null) {
+				java.util.Date date = null;
+				try {
+					date = df.parse(parsed.get("date").toString());
+				} catch (ParseException ex) {
+					date = null;
+				}
+				if (date != null) {
+					art.getArticleSummary().setDate(date);
+				}
+			}
+			if (parsed.get("thumbImage") != null) {
+				art.getArticleSummary().setThumbImage(parsed.get("thumbImage").toString());
+			}
+			if (parsed.get("title") != null) {
+				art.getArticleSummary().setTitle(parsed.get("title").toString());
+			}
+			// We need to check if the tags are an array.
 			
 		}
 		return ret;
