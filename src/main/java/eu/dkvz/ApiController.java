@@ -42,6 +42,9 @@ public class ApiController {
 	@Autowired
 	private ApiStatsService apiStatsService;
 	
+	@Autowired
+	private ArticleImportService articleImportService;
+	
 	@CrossOrigin(origins = "*")
 	@RequestMapping("/")
     @ResponseBody
@@ -265,6 +268,22 @@ public class ApiController {
 			this.lockImport = false;
 		}
 		return null;
+	}
+	
+	// TODO REMOVE THIS
+	
+	@CrossOrigin(origins = "*")
+	@RequestMapping("/import-articles-test")
+	@ResponseBody
+	public List<Article> listArticles() {
+		if (this.lockImport) {
+			return null;
+		} else {
+			this.lockImport = true;
+			List<Article> l = this.articleImportService.showMeTheJSONFiles();
+			this.lockImport = false;
+			return l;
+		}
 	}
 	
 	public List<Map<String, Object>> getArticlesOrShortsStartingFrom(long articleId, int max, String tags, String order, boolean isShort) {

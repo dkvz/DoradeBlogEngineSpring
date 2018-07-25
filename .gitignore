@@ -3,6 +3,8 @@
 db.sqlite
 GeoLite2-City.mmdb
 
+import-test
+
 ### STS ###
 .apt_generated
 .classpath

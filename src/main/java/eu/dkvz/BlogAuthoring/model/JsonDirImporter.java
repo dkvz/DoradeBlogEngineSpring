@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat;
 public final class JsonDirImporter {
 
 	private final File dir;
-	private final SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ssZ");
+	private final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 	
 	public JsonDirImporter(String path) {
 		this.dir = new File(path);
@@ -34,6 +34,7 @@ public final class JsonDirImporter {
 		return this.dir.canWrite();
 	}
 	
+	// I don't use this method.
 	private boolean mandatoryFieldsPresent(Map<String, Object> parsed) {
 		return parsed.get("articleURL") != null &&
 				parsed.get("summary") != null &&
@@ -41,6 +42,8 @@ public final class JsonDirImporter {
 				parsed.get("title") != null;
 	}
 	
+	// This method is awful.
+	// Now I know I should always use an object wrapper instead of this horror.
 	public List<Article> importArticles() {
 		// Try to parse the JSON.
 		// Delete the files for which it doesn't work.
@@ -74,12 +77,12 @@ public final class JsonDirImporter {
 			// add a new article.
 			// We do need to parse the things that are numbers.
 			Article art = new Article();
-			if (parsed.get("articleId") instanceof Number) {
-				Number num = (Number)parsed.get("articleId");
+			if (parsed.get("id") instanceof Number) {
+				Number num = (Number)parsed.get("id");
 				art.getArticleSummary().setId(num.longValue());
-			} else if (parsed.get("articleId") instanceof String) {
+			} else if (parsed.get("id") instanceof String) {
 				try {
-					art.getArticleSummary().setId(Long.parseLong((String)parsed.get("articleId")));
+					art.getArticleSummary().setId(Long.parseLong((String)parsed.get("id")));
 				} catch (NumberFormatException ex) {
 					// Leave it at -1. It should already be at -1.
 				}
@@ -93,14 +96,25 @@ public final class JsonDirImporter {
 			}
 			if (parsed.get("articleURL") != null) art.getArticleSummary().setArticleURL(parsed.get("articleURL").toString());
 			if (parsed.get("userId") != null) {
-				art.getArticleSummary().setUser(new User());
-				art.getArticleSummary().getUser().setName(parsed.get("userId").toString());
+				User usr = new User();
+				if (parsed.get("userId") instanceof Number) {
+					Number uid = (Number)parsed.get("userId");
+					usr.setId(uid.longValue());
+					art.getArticleSummary().setUser(usr);
+				} else {
+					try {
+						usr.setId(Long.parseLong(parsed.get("userId").toString()));
+						art.getArticleSummary().setUser(usr);
+					} catch(NumberFormatException ex) {
+						// Nope.
+					}
+				}
 			}
 			if (parsed.get("content") != null) {
 				art.setContent(parsed.get("content").toString());
 			}
 			if (parsed.get("summary") != null) {
-				art.setContent(parsed.get("summary").toString());
+				art.getArticleSummary().setSummary((parsed.get("summary").toString()));
 			}
 			// We might have to parse a date. Sad face.
 			if (parsed.get("date") != null) {
@@ -121,7 +135,55 @@ public final class JsonDirImporter {
 				art.getArticleSummary().setTitle(parsed.get("title").toString());
 			}
 			// We need to check if the tags are an array.
-			
+			if (parsed.get("tags") instanceof List) {
+				// Normally "tags" in ArticleSummary is instantiated by the constructor.
+				// Each item is actually a LinkedHashMap, but we can just use Map.
+				// We just need the ids.
+				for (Object o: (List<Object>)parsed.get("tags")) {
+					if (o instanceof Map) {
+						Map<String, Object> m = (Map<String, Object>)o;
+						if (m.get("id") != null) {
+							if (m.get("id") instanceof Number) {
+								ArticleTag t = new ArticleTag();
+								Number n = (Number)m.get("id");
+								t.setId(n.longValue());
+								art.getArticleSummary().getTags().add(t);
+							} else if (m.get("id") instanceof String) {
+								try {
+									ArticleTag t = new ArticleTag();
+									t.setId(Long.parseLong((String)m.get("id")));
+									art.getArticleSummary().getTags().add(t);
+								} catch (NumberFormatException ex) {
+									// Don't add the tag.
+								}
+							}
+						}
+					}
+				}
+			}
+			// Also check for published:
+			if (parsed.get("published") != null) {
+				if (parsed.get("published") instanceof Boolean) {
+					art.getArticleSummary().setPublished((Boolean)parsed.get("published") == Boolean.TRUE ? 
+							true : false);
+				} else if (parsed.get("published") instanceof String) {
+					String str = (String)parsed.get("published");
+					if (str.equals("false")) art.getArticleSummary().setPublished(false);
+					else art.getArticleSummary().setPublished(true);
+				} else if (parsed.get("published") instanceof Number) {
+					Number n = (Number)parsed.get("published");
+					art.getArticleSummary().setPublished(
+						n.intValue() != 0
+					);
+				} else {
+					art.getArticleSummary().setPublished(true);
+				}
+			} else {
+				art.getArticleSummary().setPublished(false);
+			}
+			// Parsed the article, we can now delete it:
+			file.delete();
+			ret.add(art);
 		}
 		return ret;
 	}

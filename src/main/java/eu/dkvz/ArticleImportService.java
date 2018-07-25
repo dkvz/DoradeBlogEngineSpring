@@ -7,9 +7,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import eu.dkvz.BlogAuthoring.model.*;
+import java.util.*;
 
 @Service
-public class ArticlerImportService {
+public class ArticleImportService {
 
 	@Value("${import-path}")
 	private String importPath;
@@ -27,6 +28,8 @@ public class ArticlerImportService {
 		}
 	}
 	
-	
+	public List<Article> showMeTheJSONFiles() {
+		return this.jsDirImporter.importArticles();
+	}
 	
 }
