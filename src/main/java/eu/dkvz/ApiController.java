@@ -34,6 +34,8 @@ public class ApiController {
 	public static final String SITE_ARTICLES_ROOT = "articles";
 	public static final String SITE_SHORTS_ROOT = "breves";
 	
+	public boolean lockImport = false;
+	
 	@Autowired
     public BlogDataAccessSpring blogDataAccess;
 	
@@ -246,6 +248,23 @@ public class ApiController {
 		} else {
 			throw new NotFoundException();
 		}
+	}
+	
+	@CrossOrigin(origins = "*")
+	@RequestMapping("/import-articles")
+	@ResponseBody
+	public Map<String, Object> importArticles() {
+		// TODO We need to lock this method, can't run it twice at the same time;
+		Map<String, Object> ret = new HashMap<>();
+		if (this.lockImport) {
+			ret.put("status", "error");
+			ret.put("message", "Import already in progress");
+		} else {
+			this.lockImport = true;
+			// DO STUFF
+			this.lockImport = false;
+		}
+		return null;
 	}
 	
 	public List<Map<String, Object>> getArticlesOrShortsStartingFrom(long articleId, int max, String tags, String order, boolean isShort) {
