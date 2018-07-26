@@ -58,9 +58,14 @@ public class ArticleImportService {
 						if (existingArt != null) {
 							// In fact nothing is mandatory here.
 							// Let's have the DB method do most of the work.
-							
-							
-							
+							try {
+								blogDataAccess.updateArticle(art);
+								art.setMessage("Updated article or short");
+							} catch (DataAccessException ex) {
+								art.setError(true);
+								art.setMessage("SQL Error updating article - " + ex.getMessage());
+								ex.printStackTrace();
+							}
 						} else {
 							art.setError(true);
 							art.setMessage("Provided article ID does not exist");

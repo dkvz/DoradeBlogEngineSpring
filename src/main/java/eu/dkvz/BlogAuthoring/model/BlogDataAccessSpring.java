@@ -326,10 +326,19 @@ public class BlogDataAccessSpring {
 	}
 	
 	public void insertTagsForArticle(List<ArticleTag> tags, long articleId) throws DataAccessException {
-		String sql = "INSERT INTO article_tags (article_id, tag_id) VALUES(?, ?)";
 		for (ArticleTag tag: tags) {
-			this.jdbcTpl.update(sql, articleId, tag.getId());
+			this.insertTagForArticle(tag, articleId);
 		}
+	}
+	
+	public void insertTagForArticle(ArticleTag tag, long articleId) throws DataAccessException {
+		String sql = "INSERT INTO article_tags (article_id, tag_id) VALUES(?, ?)";
+		this.jdbcTpl.update(sql, articleId, tag.getId());
+	}
+	
+	public void deleteTagForArticle(ArticleTag tag, long articleId) throws DataAccessException {
+		String sql = "DELETE FROM article_tags WHERE article_id = ? AND tag_id = ?";
+		this.jdbcTpl.update(sql, tag.getId(), articleId);
 	}
 	
 	public boolean insertArticle(Article article) throws DataAccessException {
@@ -342,8 +351,74 @@ public class BlogDataAccessSpring {
 		return this.insertArticle(article, true);
 	}
 
+	// Oh god this is SO UGLY
 	public boolean updateArticle(Article article) throws DataAccessException {
-		return false;
+		// This method does not check if the article exists.
+		String sql = "UPDATE articles SET ";
+		String eqm = " = ?";
+		List<String> toSet = new ArrayList<>();
+		List<Object> args = new ArrayList<>();
+		if (article.getArticleSummary().getTitle() != null) {
+			toSet.add("title".concat(eqm));
+			args.add(article.getArticleSummary().getTitle());
+		}
+		if (article.getArticleSummary().getDate() != null) {
+			toSet.add("date".concat(eqm));
+			args.add(article.getArticleSummary().getDate().getTime() / 1000);
+		}
+		if (article.getArticleSummary().getArticleURL() != null) {
+			toSet.add("article_url".concat(eqm));
+			args.add(article.getArticleSummary().getArticleURL());
+		}
+		if (article.getArticleSummary().getUser() != null) {
+			toSet.add("user_id".concat(eqm));
+			args.add(article.getArticleSummary().getUser().getId());
+		}
+		if (article.getArticleSummary().getSummary() != null) {
+			toSet.add("summary".concat(eqm));
+			args.add(article.getArticleSummary().getSummary());
+		}
+		if (article.getArticleSummary().getThumbImage() != null) {
+			toSet.add("thumb_image".concat(eqm));
+			args.add(article.getArticleSummary().getThumbImage());
+		}
+		if (article.getContent() != null) {
+			toSet.add("content".concat(eqm));
+			args.add(article.getContent());
+		}
+		// Check if we need to modify tags
+		if (article.getArticleSummary().getTags() != null && 
+				!article.getArticleSummary().getTags().isEmpty()) {
+			// Check with current tags for this article.
+			List<ArticleTag> currentTags = this.getTagsForArticle(article.getArticleSummary().getId());
+			for (ArticleTag t : article.getArticleSummary().getTags()) {
+				if (!currentTags.contains(t)) {
+					// This tag wasn't present before.
+					// Add it:
+					this.insertTagForArticle(t, article.getArticleSummary().getId());
+				}
+			}
+			// Now what if we removed tags?
+			for (ArticleTag t: currentTags) {
+				if (!article.getArticleSummary().getTags().contains(t)) {
+					// Tag vanished, remove it.
+					this.deleteTagForArticle(t, article.getArticleSummary().getId());
+				}
+			}
+		}
+		// Don't do anything if for some reason toSet is empty.
+		if (!toSet.isEmpty()) {
+			// Add the rest of the query.
+			// Also add the article ID to args.
+			sql += String.join(", ", toSet);
+			// Add the where clause:
+			sql += " WHERE id = ?";
+			args.add(article.getArticleSummary().getId());
+			this.jdbcTpl.update(sql, args);
+		}
+		// ON L'APPELLE 
+		// Le booléen qui sert à rien
+		return true;
 	}
 
 	public boolean deleteArticleById(long id) throws DataAccessException {

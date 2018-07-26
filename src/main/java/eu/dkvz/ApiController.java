@@ -256,18 +256,24 @@ public class ApiController {
 	@CrossOrigin(origins = "*")
 	@RequestMapping("/import-articles")
 	@ResponseBody
-	public Map<String, Object> importArticles() {
-		// TODO We need to lock this method, can't run it twice at the same time;
-		Map<String, Object> ret = new HashMap<>();
+	public List<Map<String, Object>> importArticles() {
+		// This is a wonky locking mechanism but very few
+		// people are supposed to know when to call this endpoint.
+		List<Map<String, Object>> ret = new ArrayList<Map<String, Object>>();
 		if (this.lockImport) {
-			ret.put("status", "error");
-			ret.put("message", "Import already in progress");
+			Map<String, Object> stat = new HashMap<String, Object>();
+			stat.put("status", "error");
+			stat.put("message", "Import already in progress");
+			ret.add(stat);
 		} else {
 			this.lockImport = true;
-			// DO STUFF
+			List<ImportedArticle> articles = this.articleImportService.importJsonFiles();
+			for (ImportedArticle art : articles) {
+				ret.add(art.toImportStatusMap());
+			}
 			this.lockImport = false;
 		}
-		return null;
+		return ret;
 	}
 	
 	public List<Map<String, Object>> getArticlesOrShortsStartingFrom(long articleId, int max, String tags, String order, boolean isShort) {

@@ -1,5 +1,7 @@
 package eu.dkvz.BlogAuthoring.model;
 
+import java.util.*;
+
 public class ImportedArticle extends Article {
 
 	private String filename;
@@ -13,6 +15,14 @@ public class ImportedArticle extends Article {
 	
 	public ImportedArticle(ArticleSummary sum) {
 		super(sum);
+	}
+	
+	public Map<String, Object> toImportStatusMap() {
+		Map<String, Object> ret = new HashMap<>();
+		ret.put("status", this.isError() ? "error" : "success");
+		ret.put("message", this.getMessage());
+		ret.put("id", this.getArticleSummary().getId());
+		return ret;
 	}
 	
 	public String getFilename() {
