@@ -86,6 +86,46 @@ Creates a prerendered HTML page for social media site robots complete with Open 
 
 Will generate URI for "shorts" if the article ID is numeric, otherwise the item will be seen as an "article".
 
+### GET /import-articles
+Initiates the import from the local import folder on the server.
+
+It's expecting to find JSON files with a format similar to this:
+```
+{
+  "id":35,
+  "articleURL":"truc_machin",
+  "title":"Mon Super Titre",
+  "summary":"Salut\nEt oui",
+  "content":"Contenu de l'article",
+  "published":false,
+  "thumbImage":"img.png",
+  "userId": 2,
+  "date": "2018-07-25T21:35:04.887Z",
+  "tags": [
+    {"id":"21"},
+    {"id":"44"}
+  ],
+  "short": false
+}
+```
+Do pay attention to the date format, it's one of the Javascript outputs. Don't remember if it's the UTC date ot another.
+
+The tags array has to be the complete list of tags for the article, putting in an empty one will remove all tags.
+
+The "id" field is only mandatory when updating an existing article. In that case, some fields can be left to null and will be ignored by the update operation.
+
+However, **published MUST always be present**, if it's not it's assumed to be false. I think.
+
+The importer ignores files that it doesn't have write access to. And it won't tell you about it in the response, it's just discarded.
+
+The field "articleUrl" is allowed instead of "articleURL".
+
+When adding an article, if articleUrl is not present, it automatically becomes a short. Even if you had set short to false.
+
+Response is uh... I've yet to decide.
+
+The call is synchronous, when you receive a response from the server, it's done adding the data to the database.
+
 # TODO
 * The spring-boot-devtools dependency is nice but I should check what "optional" means and if it does anything when building to prod.
 * What happens if you don't use an integer in /articles-starting-from/{articleId}?

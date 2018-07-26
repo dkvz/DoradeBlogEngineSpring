@@ -34,29 +34,50 @@ public final class JsonDirImporter {
 		return this.dir.canWrite();
 	}
 	
-	// I don't use this method.
-	private boolean mandatoryFieldsPresent(Map<String, Object> parsed) {
-		return parsed.get("articleURL") != null &&
-				parsed.get("summary") != null &&
-				parsed.get("content") != null &&
-				parsed.get("title") != null;
+	// This whole JSON map thingy became a casting nightmare
+	public static boolean parseBooleanValue(Object val, boolean def) {
+		if (val != null) {
+			if (val instanceof Boolean) {
+				return (Boolean)val == Boolean.TRUE ? 
+						true : false;
+			} else if (val instanceof String) {
+				String str = (String)val;
+				if (str.toLowerCase().equals("false")) return false;
+				else return true;
+			} else if (val instanceof Number) {
+				Number n = (Number)val;
+				return n.intValue() != 0;
+			}
+		}
+		return def;
 	}
 	
 	// This method is awful.
 	// Now I know I should always use an object wrapper instead of this horror.
-	public List<Article> importArticles() {
+	public List<ImportedArticle> importArticles() {
 		// Try to parse the JSON.
 		// Delete the files for which it doesn't work.
-		List<Article> ret = new ArrayList<>();
+		List<ImportedArticle> ret = new ArrayList<>();
 		JsonParser parser = JsonParserFactory.getJsonParser();
 		File[] files = this.lsEarliestFirst();
 		for (File file : files) {
+			// Try to create the Article objects with no errors and strange stuff
+			// in it.
+			// Actually we'll check for this later.
+			// If you provide an invalid article ID that is not a number, we just
+			// add a new article.
+			// We do need to parse the things that are numbers.
+			ImportedArticle art = new ImportedArticle();
+			art.setFilename(file.getName());
 			// Read the file.
 			String content;
 			try {
 				content = new String(Files.readAllBytes(file.toPath()));
 			} catch (IOException ex) {
 				// Can't read this file for some reason. Just forget about it.
+				art.setError(true);
+				art.setMessage("IO Error: " + ex.getMessage());
+				ret.add(art);
 				continue;
 			}
 			Map<String, Object> parsed;
@@ -67,16 +88,12 @@ public final class JsonDirImporter {
 				// Invalid file, delete it.
 				// This might throw an IO exception and crash the app if
 				// deleting doesn't work for some reason.
+				art.setError(true);
+				art.setMessage("JSON parsing error");
+				ret.add(art);
 				file.delete();
 				continue;
 			}
-			// Try to create the Article objects with no errors and strange stuff
-			// in it.
-			// Actually we'll check for this later.
-			// If you provide an invalid article ID that is not a number, we just
-			// add a new article.
-			// We do need to parse the things that are numbers.
-			Article art = new Article();
 			if (parsed.get("id") instanceof Number) {
 				Number num = (Number)parsed.get("id");
 				art.getArticleSummary().setId(num.longValue());
@@ -162,25 +179,9 @@ public final class JsonDirImporter {
 				}
 			}
 			// Also check for published:
-			if (parsed.get("published") != null) {
-				if (parsed.get("published") instanceof Boolean) {
-					art.getArticleSummary().setPublished((Boolean)parsed.get("published") == Boolean.TRUE ? 
-							true : false);
-				} else if (parsed.get("published") instanceof String) {
-					String str = (String)parsed.get("published");
-					if (str.equals("false")) art.getArticleSummary().setPublished(false);
-					else art.getArticleSummary().setPublished(true);
-				} else if (parsed.get("published") instanceof Number) {
-					Number n = (Number)parsed.get("published");
-					art.getArticleSummary().setPublished(
-						n.intValue() != 0
-					);
-				} else {
-					art.getArticleSummary().setPublished(true);
-				}
-			} else {
-				art.getArticleSummary().setPublished(false);
-			}
+			art.getArticleSummary().setPublished(JsonDirImporter.parseBooleanValue(parsed.get("published"), true));
+			// Now check for 'short'. It's false by default.
+			art.setShortArticle(JsonDirImporter.parseBooleanValue(parsed.get("short"), false));
 			// Parsed the article, we can now delete it:
 			file.delete();
 			ret.add(art);

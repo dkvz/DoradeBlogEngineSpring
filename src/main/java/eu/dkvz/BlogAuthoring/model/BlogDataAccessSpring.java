@@ -1,12 +1,17 @@
 package eu.dkvz.BlogAuthoring.model;
 
+import java.sql.Statement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -276,8 +281,65 @@ public class BlogDataAccessSpring {
 		return art;
 	}
 
-	public boolean insertArticle(Article article) throws DataAccessException {
+	private boolean insertArticle(Article article, boolean shortArticle) throws DataAccessException {
+		String sql = "INSERT INTO articles "
+				+ "(title, article_url, thumb_image, date, user_id, summary, content, published, short) "
+				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		if (article.getArticleSummary().getDate() == null) {
+			article.getArticleSummary().setDate(new java.util.Date());
+		}
+		// We assume the uniqueness or article_url has been checked before.
+		// It will throw a SQL error anyway if the url is not unique.
+		KeyHolder key = new GeneratedKeyHolder();
+		int res = this.jdbcTpl.update(new PreparedStatementCreator() {
+
+		      @Override
+		      public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+		        final PreparedStatement ps = connection.prepareStatement(sql, 
+		            Statement.RETURN_GENERATED_KEYS);
+		        ps.setString(1, article.getArticleSummary().getTitle());
+		        ps.setString(2, article.getArticleSummary().getArticleURL());
+		        ps.setString(3, article.getArticleSummary().getArticleURL());
+		        ps.setLong(4, article.getArticleSummary().getDate().getTime() / 1000);
+		        ps.setLong(5, article.getArticleSummary().getUser().getId());
+		        ps.setString(6, article.getArticleSummary().getSummary());
+		        ps.setString(7, article.getContent());
+		        ps.setInt(8, article.getArticleSummary().isPublished() ? 1 : 0);
+		        ps.setInt(9, shortArticle ? 1 : 0);
+		        return ps;
+		      }
+		      
+		    }, 
+				key);
+		if (res <= 0) return false;
+		// Set the inserted key:
+		article.getArticleSummary().setId(key.getKey().longValue());
+		// Add the tags.
+		// We should use a transaction for this but uh... Yeah.
+		// Now we can call another method to insert the tags.
+		// Which won't check if the tags exist.
+		this.insertTagsForArticle(article.getArticleSummary().getTags(), 
+				article.getArticleSummary().getId());
+		// At this point always return true. Because we're not
+		// using transactions, remember?
 		return false;
+	}
+	
+	public void insertTagsForArticle(List<ArticleTag> tags, long articleId) throws DataAccessException {
+		String sql = "INSERT INTO article_tags (article_id, tag_id) VALUES(?, ?)";
+		for (ArticleTag tag: tags) {
+			this.jdbcTpl.update(sql, articleId, tag.getId());
+		}
+	}
+	
+	public boolean insertArticle(Article article) throws DataAccessException {
+		return this.insertArticle(article, false);
+	}
+	
+	public boolean insertShort(Article article) throws DataAccessException {
+		// We have to nullify articleUrl:
+		article.getArticleSummary().setArticleURL(null);
+		return this.insertArticle(article, true);
 	}
 
 	public boolean updateArticle(Article article) throws DataAccessException {
