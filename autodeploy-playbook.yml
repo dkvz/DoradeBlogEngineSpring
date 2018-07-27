@@ -1,0 +1,39 @@
+# Attention: On ne copie pas la DB geoip, ni la wordlist, ni la DB tout court ici.
+
+---
+- hosts: dkvz_eu
+  remote_user: root
+  vars:
+    remote_dir: /srv/vhosts/dorade_api_spring
+    service_name: dorade-api-spring
+    prod_jar_name: DoradeBlogEngineSpring.jar
+    jar_version: 3
+  tasks:
+    - name: Backup previous jar
+      copy:
+        src: "{{ remote_dir }}/{{ prod_jar_name }}"
+        dest: "{{ remote_dir }}/previous{{ jar_version }}.jar"
+        remote_src: yes
+    - name: Copy the build to destination
+      copy:
+        src: "target/DoradeBlogEngineSpring-0.0.1-SNAPSHOT.jar"
+        dest: "{{ remote_dir }}/candidate.jar"
+    - name: Enable maintenance site
+      shell: /root/enable_maintenance_site.sh
+    - name: Stop the API
+      service:
+        name: "{{ service_name }}"
+        state: stopped
+    - name: Copy jar to prod
+      copy:
+        src: "{{ remote_dir }}/candidate.jar"
+        dest: "{{ remote_dir }}/{{ prod_jar_name }}"
+        remote_src: yes
+    - name: Start the API
+      service:
+        name: "{{ service_name }}"
+        state: started
+    - name: Enable prod site
+      shell: /root/enable_prod_site.sh
+    
+
