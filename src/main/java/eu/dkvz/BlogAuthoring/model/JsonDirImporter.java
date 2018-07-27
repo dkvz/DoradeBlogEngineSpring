@@ -10,7 +10,8 @@ import java.text.SimpleDateFormat;
 public final class JsonDirImporter {
 
 	private final File dir;
-	private final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+	//private final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+	private final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	
 	public JsonDirImporter(String path) {
 		this.dir = new File(path);

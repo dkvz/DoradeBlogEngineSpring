@@ -299,7 +299,7 @@ public class BlogDataAccessSpring {
 		            Statement.RETURN_GENERATED_KEYS);
 		        ps.setString(1, article.getArticleSummary().getTitle());
 		        ps.setString(2, article.getArticleSummary().getArticleURL());
-		        ps.setString(3, article.getArticleSummary().getArticleURL());
+		        ps.setString(3, article.getArticleSummary().getThumbImage());
 		        ps.setLong(4, article.getArticleSummary().getDate().getTime() / 1000);
 		        ps.setLong(5, article.getArticleSummary().getUser().getId());
 		        ps.setString(6, article.getArticleSummary().getSummary());
@@ -322,7 +322,7 @@ public class BlogDataAccessSpring {
 				article.getArticleSummary().getId());
 		// At this point always return true. Because we're not
 		// using transactions, remember?
-		return false;
+		return true;
 	}
 	
 	public void insertTagsForArticle(List<ArticleTag> tags, long articleId) throws DataAccessException {

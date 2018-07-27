@@ -37,7 +37,8 @@ public class ArticleImportService {
 		// or if the article ID resolves to an article in DB (if updating).
 		// We also need a list of all tags to check if they exist:
 		List<ArticleTag> allTags = blogDataAccess.getAllTags();
-		for (ImportedArticle art: imported) {
+		// I feel dirty for using labels.
+		mainLoop: for (ImportedArticle art: imported) {
 			if (!art.isError()) {
 				User usr = blogDataAccess.getUser(art.getArticleSummary().getUser().getId());
 				if (usr != null) {
@@ -48,8 +49,16 @@ public class ArticleImportService {
 								// Tag doesn't exist.
 								art.setError(true);
 								art.setMessage("One of the provided tags doesn't exist");
-								continue;
+								continue mainLoop;
 							}
+						}
+					}
+					// If we got an URL we have to check that it doesn't already exist:
+					if (art.getArticleSummary().getArticleURL() != null) {
+						if (blogDataAccess.getArticleByUrl(art.getArticleSummary().getArticleURL()) != null) {
+							art.setError(true);
+							art.setMessage("Provided article URL already exists");
+							continue mainLoop;
 						}
 					}
 					if (art.getArticleSummary().getId() > 0) {
