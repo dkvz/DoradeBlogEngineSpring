@@ -40,57 +40,74 @@ public class ArticleImportService {
 		// I feel dirty for using labels.
 		mainLoop: for (ImportedArticle art: imported) {
 			if (!art.isError()) {
-				User usr = blogDataAccess.getUser(art.getArticleSummary().getUser().getId());
-				if (usr != null) {
-					// Check if the tags exist:
-					if (art.getArticleSummary().getTags() != null && art.getArticleSummary().getTags().size() > 0) {
-						for (ArticleTag tag : art.getArticleSummary().getTags()) {
-							if (!allTags.contains(tag)) {
-								// Tag doesn't exist.
-								art.setError(true);
-								art.setMessage("One of the provided tags doesn't exist");
-								continue mainLoop;
-							}
-						}
-					}
-					// If we got an URL we have to check that it doesn't already exist:
-					if (art.getArticleSummary().getArticleURL() != null) {
-						if (blogDataAccess.getArticleByUrl(art.getArticleSummary().getArticleURL()) != null) {
+				if (art.getArticleSummary().getUser() != null && 
+						art.getArticleSummary().getUser().getId() > 0 &&
+						blogDataAccess.getUser(art.getArticleSummary().getUser().getId()) == null) {
+					// User does not exist.
+					art.setError(true);
+					art.setMessage("Provided user does not exist");
+					continue mainLoop;
+				}
+				// Check if the tags exist:
+				if (art.getArticleSummary().getTags() != null && art.getArticleSummary().getTags().size() > 0) {
+					for (ArticleTag tag : art.getArticleSummary().getTags()) {
+						if (!allTags.contains(tag)) {
+							// Tag doesn't exist.
 							art.setError(true);
-							art.setMessage("Provided article URL already exists");
+							art.setMessage("One of the provided tags doesn't exist");
 							continue mainLoop;
 						}
 					}
-					if (art.getArticleSummary().getId() > 0) {
-						// Updating:
-						Article existingArt = blogDataAccess.getArticleById(art.getArticleSummary().getId());
-						if (existingArt != null) {
-							// In fact nothing is mandatory here.
-							// Let's have the DB method do most of the work.
-							try {
+				}
+				if (art.getArticleSummary().getId() > 0) {
+					// Updating:
+					Article existingArt = blogDataAccess.getArticleById(art.getArticleSummary().getId());
+					if (existingArt != null) {
+						// In fact nothing is mandatory here.
+						// Let's have the DB method do most of the work.
+						try {
+							// Check if we're updating the URL and if it already exists:
+							if (art.getArticleSummary().getArticleURL() != null && 
+									!art.getArticleSummary().getArticleURL().equals(existingArt.getArticleSummary().getArticleURL()) &&
+								    blogDataAccess.getArticleByUrl(art.getArticleSummary().getArticleURL()) != null) {
+									// This URL is already in use.
+									art.setError(true);
+									art.setMessage("Provided URL already exists");
+							} else {
 								blogDataAccess.updateArticle(art);
 								art.setMessage("Updated article or short");
-							} catch (DataAccessException ex) {
-								art.setError(true);
-								art.setMessage("SQL Error updating article - " + ex.getMessage());
-								ex.printStackTrace();
 							}
-						} else {
+						} catch (DataAccessException ex) {
 							art.setError(true);
-							art.setMessage("Provided article ID does not exist");
+							art.setMessage("SQL Error updating article - " + ex.getMessage());
+							ex.printStackTrace();
 						}
 					} else {
-						// Add a new article to the database.
-						// The fields title and articleURL are mandatory. Must be not null and 
-						// longer than 0 and the articleURL must not already exist.
-						// Actually, if it's a short we don't care about articleURL.
-						try {
-							if (art.getArticleSummary().getTitle() != null && 
-									!art.getArticleSummary().getTitle().isEmpty()) {
-								if (!art.isShortArticle() && 
-										art.getArticleSummary().getArticleURL() != null &&
-										!art.getArticleSummary().getArticleURL().isEmpty()) {
-									// We're adding a full article.
+						art.setError(true);
+						art.setMessage("Provided article ID does not exist");
+					}
+				} else {
+					// Add a new article to the database.
+					// The fields title and articleURL are mandatory. Must be not null and 
+					// longer than 0 and the articleURL must not already exist.
+					// Actually, if it's a short we don't care about articleURL.
+					try {
+						// This is a mess.
+						if (art.getArticleSummary().getUser() == null || 
+								art.getArticleSummary().getUser().getId() <= 0) {
+							// Can't add a new article with no attached user.
+							art.setError(true);
+							art.setMessage("Cannot add article with no user provided");
+							continue mainLoop;
+						}
+						if (art.getArticleSummary().getTitle() != null && 
+								!art.getArticleSummary().getTitle().isEmpty()) {
+							if (!art.isShortArticle() && 
+									art.getArticleSummary().getArticleURL() != null &&
+									!art.getArticleSummary().getArticleURL().isEmpty()) {
+								// We're adding a full article.
+								// If we got an URL we have to check that it doesn't already exist:
+								if (blogDataAccess.getArticleByUrl(art.getArticleSummary().getArticleURL()) == null) {
 									if (art.getArticleSummary().getSummary() == null) art.getArticleSummary().setSummary("");
 									if (art.getContent() == null) art.setContent("");
 									if (!blogDataAccess.insertArticle(art)) {
@@ -100,30 +117,34 @@ public class ArticleImportService {
 										art.setMessage("Created new article");
 									}
 								} else {
-									// We're adding a short. And that is even if shortArticle is
-									// actually false.
-									if (!blogDataAccess.insertShort(art)) {
-										art.setError(true);
-										art.setMessage("Possible SQL error inserting new short");
-									} else {
-										art.setMessage("Created new short");
-									}
+									// URL already exists.
+									art.setError(true);
+									art.setMessage("Provided URL already exists");
 								}
 							} else {
-								// No title.
-								art.setError(true);
-								art.setMessage("Articles must have a title");
+								// We're adding a short. And that is even if shortArticle is
+								// actually false.
+								if (!blogDataAccess.insertShort(art)) {
+									art.setError(true);
+									art.setMessage("Possible SQL error inserting new short");
+								} else {
+									art.setMessage("Created new short");
+								}
 							}
-						} catch (DataAccessException ex) {
+						} else {
+							// No title.
 							art.setError(true);
-							art.setMessage("SQL error, see stacktrace");
-							ex.printStackTrace();
+							art.setMessage("Articles must have a title");
 						}
+					} catch (DataAccessException ex) {
+						art.setError(true);
+						art.setMessage("SQL error, see stacktrace");
+						ex.printStackTrace();
 					}
-				} else {
-					art.setError(true);
-					art.setMessage("Provided user ID does not exist");
 				}
+			} else {
+				art.setError(true);
+				art.setMessage("Provided user ID does not exist");
 			}
 		}
 		return imported;

@@ -132,6 +132,7 @@ The call is synchronous, when you receive a response from the server, it's done 
 * Change the favicon.
 * Add statistics such as the amount of views.
 * The methods inserting stuff into the database could set the inserted id in the Java Bean that was inserted.
+* The way I check for existence of stuff, especially in ArticleImportService, is getting the whole data. I could make more efficient checks.
 
 # Testing the article import
 * Try updating an article with a date set, then with no date set.

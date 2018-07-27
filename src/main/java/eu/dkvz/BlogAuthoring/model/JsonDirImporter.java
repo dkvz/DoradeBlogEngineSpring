@@ -180,7 +180,7 @@ public final class JsonDirImporter {
 				}
 			}
 			// Also check for published:
-			art.getArticleSummary().setPublished(JsonDirImporter.parseBooleanValue(parsed.get("published"), true));
+			art.getArticleSummary().setPublished(JsonDirImporter.parseBooleanValue(parsed.get("published"), false));
 			// Now check for 'short'. It's false by default.
 			art.setShortArticle(JsonDirImporter.parseBooleanValue(parsed.get("short"), false));
 			// Parsed the article, we can now delete it:
