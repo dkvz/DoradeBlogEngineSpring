@@ -27,8 +27,13 @@ import eu.dkvz.utils.TextUtils;
 @Controller
 public class ApiController {
 	
+	// IP addresses allowed to ask for costly endpoints:
+	public static final String[] ALLOWED_IP_ADDRESSES 
+		= new String[]{"::1", "127.0.0.1"};
+	
 	public static final int MAX_COMMENT_LENGTH = 2000;
 	public static final int MAX_AUTHOR_LENGTH = 70;
+	
 	// This is used for the article rendering:
 	public static final String SITE_TITLE = "Blog des gens compliqués";
 	public static final String SITE_ROOT = "https://dkvz.eu";
@@ -181,6 +186,15 @@ public class ApiController {
 		}
 		sitemap = sitemap.concat("</urlset>");
 		return sitemap;
+	}
+	
+	@RequestMapping(value="/rss", produces="application/xml")
+	@ResponseBody
+	public String getRSS(HttpServletRequest request) {
+		// This endpoint can only be called from a set of
+		// allowed IP addresses.
+		
+		return "";
 	}
 	
 	@CrossOrigin(origins = "*")
