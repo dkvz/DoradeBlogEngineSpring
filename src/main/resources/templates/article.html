@@ -16,6 +16,11 @@
   <meta property="og:site_name" content="dkvz.eu" />
   <meta name="description" content="Blog expérimental d'un humble consultant en progress-bars.">
   <title th:text="${article.articleSummary.title} + ' | ' + ${siteTitle}">Article Title</title>
+  <style>
+  	body {
+  		font-family: Roboto, sans-serif;
+  	}
+  </style>
 </head>
 <body>
   <h1 th:text="${article.articleSummary.title}">Article Title</h1>

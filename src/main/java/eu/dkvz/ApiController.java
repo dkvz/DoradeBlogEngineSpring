@@ -51,8 +51,6 @@ public class ApiController {
     @ResponseBody
     public String index() {
     	return "Nothing here";
-		//String source = "test\n<img src=\"/wp-content/stuff/iegif.gif\" />\nsdlskdjfsdlkjf<img src=\"/stuff/iegif.gif\">";
-		//return source + "<br />" + TextUtils.processRelativeUrls(source, "https://dkvz.eu");
     }
 	
 	@CrossOrigin(origins = "*")
@@ -100,6 +98,8 @@ public class ApiController {
 			model.put("siteArticlesRoot", ApiController.SITE_ARTICLES_ROOT);
 		}
 		if (art == null) throw new NotFoundException();
+		// Change relative URLs to absolute URLs in the article content:
+		art.setContent(TextUtils.processRelativeUrls(art.getContent(), ApiController.SITE_ROOT));
 		model.put("article", art);
 		model.put("siteTitle", ApiController.SITE_TITLE);
 		model.put("siteRoot", ApiController.SITE_ROOT);
@@ -109,7 +109,7 @@ public class ApiController {
 				&& art.getArticleSummary().getThumbImage().length() > 0) {
 			if (!art.getArticleSummary().getThumbImage().contains("://")) {
 				art.getArticleSummary().setThumbImage(
-						ApiController.SITE_ROOT.concat(art.getArticleSummary().getThumbImage())
+					ApiController.SITE_ROOT.concat(art.getArticleSummary().getThumbImage())
 				);
 			}
 		}
