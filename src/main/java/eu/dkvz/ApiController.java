@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import eu.dkvz.BlogAuthoring.model.*;
 import eu.dkvz.api.*;
 import eu.dkvz.utils.IpUtils;
+import eu.dkvz.utils.TextUtils;
 
 @Controller
 public class ApiController {
@@ -50,6 +51,8 @@ public class ApiController {
     @ResponseBody
     public String index() {
     	return "Nothing here";
+		//String source = "test\n<img src=\"/wp-content/stuff/iegif.gif\" />\nsdlskdjfsdlkjf<img src=\"/stuff/iegif.gif\">";
+		//return source + "<br />" + TextUtils.processRelativeUrls(source, "https://dkvz.eu");
     }
 	
 	@CrossOrigin(origins = "*")

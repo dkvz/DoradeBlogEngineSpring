@@ -10,11 +10,12 @@ public class TextUtils {
 		// TODO Detect possible whitespaces before and after the "=".
 		Pattern urls = Pattern.compile("(src=\"|href=\")(?!https?://)(.*?)\"", Pattern.MULTILINE);
 		Matcher matcher = urls.matcher(content);
-		if (matcher.find()) {
-			return matcher.group(2);
-		} else {
-			return "No matches";
-		}
+//		if (matcher.find()) {
+//			return matcher.group(2);
+//		} else {
+//			return "No matches";
+//		}
+		return matcher.replaceAll("$1" + baseUrl + "$2\"");
 	}
 	
 }
