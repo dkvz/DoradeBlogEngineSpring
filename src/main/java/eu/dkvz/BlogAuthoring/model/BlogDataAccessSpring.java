@@ -15,7 +15,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class BlogDataAccessSpring {
+public class BlogDataAccessSpring extends BlogDataAccess {
 
 	@Autowired
     private JdbcTemplate jdbcTpl;
@@ -94,6 +94,8 @@ public class BlogDataAccessSpring {
 	/**
 	 * I have no idea why I kept this ugly code.
 	 * I mean I know why, I was watching a show and copy pasting.
+	 * 
+	 * The query should be a StringBuffer, this is awful.
 	 */
 	public List<ArticleSummary> getArticleSummariesDescFromTo(long start, int count, String tags, String order) throws DataAccessException {
 		if (start < 0) {
@@ -149,6 +151,32 @@ public class BlogDataAccessSpring {
 			ret = new ArrayList<>();
 			for (Map<String, Object> row : res) {
 				ret.add(this.processArticleSummaryRow(row, (int)row.get("id")));
+			}
+		}
+		return ret;
+	}
+	
+	/**
+	 * Gets all the published articles with their content, including shorts, 
+	 * ordered by id
+	 * @param max What will be used with the limit parameter, 0 means no limit
+	 * @param order Expected to be asc or desc, case insensitive. Will not be escaped in the SQL statement so it should be hardcoded
+	 * @return a list of Article items
+	 */
+	public List<Article> getAllPublishedArticles(int max, String order) {
+		String sql = "SELECT articles.id, articles.title, "
+                + "articles.article_url, articles.thumb_image, articles.date, "
+                + "articles.user_id, articles.summary, "
+                + "articles.content, articles.short FROM articles WHERE "
+                + "articles.published = 1 ";
+		sql += BlogDataAccess.generateOrderBy("articles.id", order);
+		if (max > 0) sql += " LIMIT " + max;
+		// Processing the rows will fetch the tags.
+		List<Map<String, Object>> res = jdbcTpl.queryForList(sql);
+		List<Article> ret = new ArrayList<Article>();
+		if (res.size() > 0) {
+			for (Map<String, Object> row : res) {
+				ret.add(this.processArticleRow(row, (int)row.get("id")));
 			}
 		}
 		return ret;
@@ -266,6 +294,10 @@ public class BlogDataAccessSpring {
         	sum.setPublished(true);
         } else {
         	sum.setPublished(false);
+        }
+        if (res.get("short") != null) {
+        	// Also set if this is a short:
+        	sum.setShortArticle((int)res.get("short") > 0 ? true : false);
         }
         sum.setSummary((String)res.get("summary"));
         sum.setTags(this.getTagsForArticle(id));

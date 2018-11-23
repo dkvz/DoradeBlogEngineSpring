@@ -127,6 +127,7 @@ Response is uh... I've yet to decide.
 The call is synchronous, when you receive a response from the server, it's done adding the data to the database.
 
 # TODO
+* I refactored a static method to create order by statements, I need to use it everywhere.
 * The spring-boot-devtools dependency is nice but I should check what "optional" means and if it does anything when building to prod.
 * What happens if you don't use an integer in /articles-starting-from/{articleId}?
 * Change the favicon.

@@ -21,6 +21,7 @@ public class ArticleSummary {
     private User user;
     private long commentsCount = 0;
     private boolean published;
+    private boolean shortArticle;
 
     public ArticleSummary() {
         this.tags = new ArrayList<>();
@@ -170,5 +171,13 @@ public class ArticleSummary {
         hash = 73 * hash + Objects.hashCode(this.title);
         return hash;
     }
+
+	public boolean isShortArticle() {
+		return shortArticle;
+	}
+
+	public void setShortArticle(boolean shortArticle) {
+		this.shortArticle = shortArticle;
+	}
 
 }

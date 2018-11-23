@@ -324,4 +324,9 @@ public class ApiController {
 	    response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value());
 	}
 	
+	private String createRSSFeed(List<ArticleSummary> articles) {
+		
+		return null;
+	}
+	
 }
