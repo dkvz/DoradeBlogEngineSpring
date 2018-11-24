@@ -166,7 +166,7 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 	public List<Article> getAllPublishedArticles(int max, String order) {
 		String sql = "SELECT articles.id, articles.title, "
                 + "articles.article_url, articles.thumb_image, articles.date, "
-                + "articles.user_id, articles.summary, "
+                + "articles.user_id, articles.summary, articles.published, "
                 + "articles.content, articles.short FROM articles WHERE "
                 + "articles.published = 1 ";
 		sql += BlogDataAccess.generateOrderBy("articles.id", order);

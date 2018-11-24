@@ -1,8 +1,15 @@
 package eu.dkvz;
 
 import java.io.IOException;
+import java.io.StringWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -17,12 +24,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import eu.dkvz.BlogAuthoring.model.*;
 import eu.dkvz.api.*;
-import eu.dkvz.utils.IpUtils;
-import eu.dkvz.utils.TextUtils;
+import eu.dkvz.utils.*;
 
 @Controller
 public class ApiController {
@@ -33,12 +41,15 @@ public class ApiController {
 	
 	public static final int MAX_COMMENT_LENGTH = 2000;
 	public static final int MAX_AUTHOR_LENGTH = 70;
+	// Max length of article content in RSS descriptions:
+	public static final int MAX_RSS_LENGTH = 2500;
 	
 	// This is used for the article rendering:
 	public static final String SITE_TITLE = "Blog des gens compliqués";
 	public static final String SITE_ROOT = "https://dkvz.eu";
 	public static final String SITE_ARTICLES_ROOT = "articles";
 	public static final String SITE_SHORTS_ROOT = "breves";
+	public static final String SITE_DESCRIPTION = "Blog bizarre d'un humble consultant en progress bars.";
 	
 	public boolean lockImport = false;
 	
@@ -190,11 +201,18 @@ public class ApiController {
 	
 	@RequestMapping(value="/rss", produces="application/xml")
 	@ResponseBody
-	public String getRSS(HttpServletRequest request) {
+	public String getRSS(HttpServletRequest request) throws Exception {
 		// This endpoint can only be called from a set of
 		// allowed IP addresses.
-		
-		return "";
+		if (Arrays.stream(ApiController.ALLOWED_IP_ADDRESSES).anyMatch(
+				s -> s.equals(IpUtils.getRealIp(request))
+				)) {
+					return this.createRSSFeed(
+						blogDataAccess.getAllPublishedArticles(0, "DESC")
+					);
+		}
+		// TODO Should actually be a 403 here:
+		throw new BadRequestException();
 	}
 	
 	@CrossOrigin(origins = "*")
@@ -324,9 +342,63 @@ public class ApiController {
 	    response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value());
 	}
 	
-	private String createRSSFeed(List<ArticleSummary> articles) {
-		
-		return null;
+	// XML document building in Java is the worst thing on earth.
+	private String createRSSFeed(List<Article> articles) throws Exception {
+		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+        Document doc = docBuilder.newDocument();
+        Element rootElement = doc.createElement("rss");
+        rootElement.setAttribute("version", "2.0");
+        Element channel = doc.createElement("channel");
+        XMLUtils.addTextElement(doc, channel, "title", ApiController.SITE_TITLE);
+        XMLUtils.addTextElement(doc, channel, "link", ApiController.SITE_ROOT);
+        XMLUtils.addTextElement(doc, channel, "description", ApiController.SITE_DESCRIPTION);
+        XMLUtils.addTextElement(doc, channel, "generator", ApiController.SITE_ROOT);
+        XMLUtils.addTextElement(doc, channel, "language", "fr-fr");
+        DateFormat df = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
+        XMLUtils.addTextElement(doc, channel, "lastBuildDate", df.format(new Date()));
+        rootElement.appendChild(channel);
+        for (Article art : articles) {
+        	Element item = doc.createElement("item");
+        	XMLUtils.addTextElement(doc, item, "title", art.getArticleSummary().getTitle());
+        	String artUrl = ApiController.SITE_ROOT + 
+    				"/" + 
+    				ApiController.SITE_ARTICLES_ROOT +
+    				"/" +
+    				((art.getArticleSummary().getArticleURL() != null && art.getArticleSummary().getArticleURL().length() > 0) ?
+    						art.getArticleSummary().getArticleURL() : Long.toString(art.getArticleSummary().getId()));
+        	XMLUtils.addTextElement(
+    			doc,
+    			item,
+    			"link",
+    			artUrl
+        	);
+        	XMLUtils.addTextElement(doc, item, "pubDate", df.format(art.getArticleSummary().getDate()));
+        	XMLUtils.addTextElement(doc, item, "guid", artUrl);
+        	// We need to:
+        	// - Process relative links
+        	// - Check size
+        	//   - Cut down to max size and add a message to read the rest on the site.
+        	if (art.getContent().length() > ApiController.MAX_RSS_LENGTH) {
+        		XMLUtils.addTextElement(doc, item, "description", 
+        				TextUtils.processRelativeUrls(
+        						art.getContent().substring(0, ApiController.MAX_RSS_LENGTH) + "...<br /><b>Suite disponible sur le site</b>", ApiController.SITE_ROOT)
+        				);
+        	} else {
+        		XMLUtils.addTextElement(doc, item, "description", 
+        				TextUtils.processRelativeUrls(art.getContent(), ApiController.SITE_ROOT));
+        	}
+        	channel.appendChild(item);
+        }
+        doc.appendChild(rootElement);
+        
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        StringWriter writer = new StringWriter();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        transformer.transform(new DOMSource(doc), new StreamResult(writer));
+		return writer.getBuffer().toString();
 	}
 	
 }

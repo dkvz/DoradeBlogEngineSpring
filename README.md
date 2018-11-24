@@ -131,6 +131,7 @@ The call is synchronous, when you receive a response from the server, it's done 
 * The spring-boot-devtools dependency is nice but I should check what "optional" means and if it does anything when building to prod.
 * What happens if you don't use an integer in /articles-starting-from/{articleId}?
 * Change the favicon.
+* getRSS should return a 403 when the requesting IP address is not allowed.
 * Add statistics such as the amount of views.
 * The methods inserting stuff into the database could set the inserted id in the Java Bean that was inserted.
 * The way I check for existence of stuff, especially in ArticleImportService, is getting the whole data. I could make more efficient checks.
