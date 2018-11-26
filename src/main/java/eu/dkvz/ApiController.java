@@ -47,6 +47,7 @@ public class ApiController {
 	// This is used for the article rendering:
 	public static final String SITE_TITLE = "Blog des gens compliqués";
 	public static final String SITE_ROOT = "https://dkvz.eu";
+	public static final String RSS_FULL_URL = "https://dkvz.eu/rss.xml";
 	public static final String SITE_ARTICLES_ROOT = "articles";
 	public static final String SITE_SHORTS_ROOT = "breves";
 	public static final String SITE_DESCRIPTION = "Blog bizarre d'un humble consultant en progress bars.";
@@ -349,14 +350,21 @@ public class ApiController {
         Document doc = docBuilder.newDocument();
         Element rootElement = doc.createElement("rss");
         rootElement.setAttribute("version", "2.0");
+        rootElement.setAttribute("xmlns:media", "http://search.yahoo.com/mrss/");
+        rootElement.setAttribute("xmlns:atom", "http://www.w3.org/2005/Atom");
         Element channel = doc.createElement("channel");
         XMLUtils.addTextElement(doc, channel, "title", ApiController.SITE_TITLE);
         XMLUtils.addTextElement(doc, channel, "link", ApiController.SITE_ROOT);
         XMLUtils.addTextElement(doc, channel, "description", ApiController.SITE_DESCRIPTION);
         XMLUtils.addTextElement(doc, channel, "generator", ApiController.SITE_ROOT);
-        XMLUtils.addTextElement(doc, channel, "language", "fr-fr");
+        XMLUtils.addTextElement(doc, channel, "language", "fr-FR");
         DateFormat df = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z");
         XMLUtils.addTextElement(doc, channel, "lastBuildDate", df.format(new Date()));
+        Element atomLink = doc.createElement("atom:link");
+        atomLink.setAttribute("href", ApiController.RSS_FULL_URL);
+        atomLink.setAttribute("rel", "self");
+        atomLink.setAttribute("type", "application/rss+xml");
+        channel.appendChild(atomLink);
         rootElement.appendChild(channel);
         for (Article art : articles) {
         	Element item = doc.createElement("item");
@@ -375,6 +383,14 @@ public class ApiController {
         	);
         	XMLUtils.addTextElement(doc, item, "pubDate", df.format(art.getArticleSummary().getDate()));
         	XMLUtils.addTextElement(doc, item, "guid", artUrl);
+        	if (art.getArticleSummary().getThumbImage() != null && !art.getArticleSummary().getThumbImage().isEmpty()) {
+        		Element thumb = doc.createElement("media:thumbnail");
+        		thumb.setAttribute("url", 
+        				((art.getArticleSummary().getThumbImage().indexOf('/') == 0) ? 
+        						ApiController.SITE_ROOT + art.getArticleSummary().getThumbImage() : 
+        							ApiController.SITE_ROOT + "/" + art.getArticleSummary().getThumbImage()));
+        		item.appendChild(thumb);
+        	}
         	// We need to:
         	// - Process relative links
         	// - Check size
@@ -382,7 +398,11 @@ public class ApiController {
         	if (art.getContent().length() > ApiController.MAX_RSS_LENGTH) {
         		XMLUtils.addTextElement(doc, item, "description", 
         				TextUtils.processRelativeUrls(
-        						art.getContent().substring(0, ApiController.MAX_RSS_LENGTH) + "...<br /><b>Suite disponible sur le site</b>", ApiController.SITE_ROOT)
+    						art.getContent().substring(0, ApiController.MAX_RSS_LENGTH) + 
+    						"...<p><a href=\"" + 
+							artUrl  + 
+							"\" target=\"_blank\">Suite disponible sur le site</a></b></p>", 
+							ApiController.SITE_ROOT)
         				);
         	} else {
         		XMLUtils.addTextElement(doc, item, "description", 

@@ -27,6 +27,14 @@ The produced jar is "executable". I might change that in the future though.
 ## Deploying the jar
 I'm still figuring this out as my method using links and systemd has caused a server crash once. Also nobody will read this ever.
 
+## Cronjob
+The rss endpoint is intended to be called at least once a day through a cronjob.
+
+I use this line for the moment:
+```
+wget "http://localhost:9001/rss" -O /srv/vhosts/dorade_site/httpdocs/rss.xml
+```
+
 ## Endpoints
 Let's remake the API endpoints.
 
