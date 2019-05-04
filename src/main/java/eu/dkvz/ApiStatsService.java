@@ -12,11 +12,11 @@ import eu.dkvz.utils.IpUtils;
 @Service
 public class ApiStatsService {
 	
-	// Do async stuff to save states after a response
+	// Do async stuff to save stats after a response
 	// has been sent.
 	
 	@Autowired
-	private BlogDataAccessSpring blogDataAccess;
+	private StatsDataAccessSpring blogDataAccess;
 	
 	@Autowired
 	private GeoIPService geoipService;

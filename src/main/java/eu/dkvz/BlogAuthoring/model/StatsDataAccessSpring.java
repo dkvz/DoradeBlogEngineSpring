@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.dao.DataAccessException;
 
 @Repository
-public class StatsDataAccess {
+public class StatsDataAccessSpring {
 
   @Autowired
   @Qualifier("jdbcStats")
