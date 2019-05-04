@@ -184,17 +184,26 @@ public class ApiController {
 	
 	@RequestMapping(value="/gimme-sitemap", produces="application/xml")
 	@ResponseBody
-	public String getSitemap(@RequestParam(value="articlesRoot", defaultValue="") String articlesRoot) {
+	public String getSitemap(@RequestParam(value="articlesRoot", defaultValue="dkvz.eu/articles") String articlesRoot) {
 		List<ArticleSummary> articles = blogDataAccess.getArticleSummariesDescFromTo(0, Integer.MAX_VALUE, "", "desc");
+		List<Article> shorts = blogDataAccess.getShortsDescFromTo(0, Integer.MAX_VALUE, "", "desc");
 		String sitemap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    	sitemap = sitemap.concat("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
-    	String baseRoot = "https://" + articlesRoot + "/";
+		sitemap = sitemap.concat("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
+		String baseRoot = "https://" + articlesRoot + "/";
 		if (articles != null && articles.size() > 0) {
-	    	for (ArticleSummary sum : articles) {
-	    		sitemap = sitemap.concat("\t<url>\n");
-	    		sitemap = sitemap.concat("\t\t<loc>" + baseRoot.concat(sum.getArticleURL()) + "</loc>\n");
-	    		sitemap = sitemap.concat("\t</url>\n");
-	    	}
+			for (ArticleSummary sum : articles) {
+				sitemap = sitemap.concat("\t<url>\n");
+				sitemap = sitemap.concat("\t\t<loc>" + baseRoot.concat(sum.getArticleURL()) + "</loc>\n");
+				sitemap = sitemap.concat("\t</url>\n");
+			}
+		}
+		// This code is so ugly it hurts
+		if (shorts != null && shorts.size() > 0) {
+			for (Article aShort : shorts) {
+				sitemap = sitemap.concat("\t<url>\n");
+				sitemap = sitemap.concat("\t\t<loc>" + baseRoot + aShort.getArticleSummary().getId() + "</loc>\n");
+				sitemap = sitemap.concat("\t</url>\n");
+			}
 		}
 		sitemap = sitemap.concat("</urlset>");
 		return sitemap;
@@ -352,7 +361,7 @@ public class ApiController {
         rootElement.setAttribute("version", "2.0");
         rootElement.setAttribute("xmlns:media", "http://search.yahoo.com/mrss/");
         rootElement.setAttribute("xmlns:atom", "http://www.w3.org/2005/Atom");
-        Element channel = doc.createElement("channel");
+				Element channel = doc.createElement("channel");
         XMLUtils.addTextElement(doc, channel, "title", ApiController.SITE_TITLE);
         XMLUtils.addTextElement(doc, channel, "link", ApiController.SITE_ROOT);
         XMLUtils.addTextElement(doc, channel, "description", ApiController.SITE_DESCRIPTION);
