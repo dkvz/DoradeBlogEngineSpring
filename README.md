@@ -11,6 +11,19 @@ I may not have included the SQLite database. Project won't work without it.
 
 I'll fix this one day maybe.
 
+Now it's even worse because I added a second database to hold the stats hoping I would be able to open it read write in other projects.
+
+An empty stats DB is in the repo, has to be renamed "stats.sqlite" to work.
+
+I added a @Configuration file called `DatasourcesConfiguration.java` which defines the datasources and JDBCTemplate objects to inject in other beans.
+
+Nothing special is necessary to inject the primary database. For the stats database this is how you import the JDBCTemplate:
+```java
+@Autowired
+@Qualifier("jdbcStats")
+private JdbcTemplate jdbcTpl;
+```
+
 ## GeoIP database
 The app requires a GeoIP2 database to be present at the root of the project or it won't start.
 

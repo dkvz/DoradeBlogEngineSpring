@@ -547,6 +547,10 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 		return null;
 	}
 	
+	/**
+	 * Stats were moved to StatsDataAccess.java, so this method should
+	 * not be used.
+	 */
 	public void insertArticleStat(ArticleStat stat) throws DataAccessException {
 		String sql = "INSERT INTO article_stats (article_id, pseudo_ua, pseudo_ip, country, region, city, client_ua, client_ip, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		if (stat.getDate() == null) {
