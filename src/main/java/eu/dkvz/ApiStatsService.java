@@ -16,7 +16,7 @@ public class ApiStatsService {
 	// has been sent.
 	
 	@Autowired
-    private BlogDataAccessSpring blogDataAccess;
+	private BlogDataAccessSpring blogDataAccess;
 	
 	@Autowired
 	private GeoIPService geoipService;

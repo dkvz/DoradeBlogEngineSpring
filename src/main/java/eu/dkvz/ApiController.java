@@ -55,7 +55,7 @@ public class ApiController {
 	public boolean lockImport = false;
 	
 	@Autowired
-    public BlogDataAccessSpring blogDataAccess;
+	public BlogDataAccessSpring blogDataAccess;
 	
 	@Autowired
 	private ApiStatsService apiStatsService;

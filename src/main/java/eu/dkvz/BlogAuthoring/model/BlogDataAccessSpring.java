@@ -18,7 +18,7 @@ import org.springframework.stereotype.Repository;
 public class BlogDataAccessSpring extends BlogDataAccess {
 
 	@Autowired
-    private JdbcTemplate jdbcTpl;
+	private JdbcTemplate jdbcTpl;
 
 	public User getUser(long id) throws DataAccessException {
 		List<User> res = jdbcTpl.query("SELECT name, id FROM users WHERE id = ?", 
