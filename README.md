@@ -159,3 +159,46 @@ The call is synchronous, when you receive a response from the server, it's done 
 
 # Testing the article import
 * Try updating an article with a date set, then with no date set.
+
+# More notes
+
+## The day I switched out Hikari
+I have an issue with my dual datasource setup in that it works on my dev machine but not on the server, and only the second datasource is not working.
+
+So... I tried using the Tomcat connection pool instead of Hikari to see if that helped.
+
+It does not.
+
+But I think it's nice to document how I did.
+
+Initially in pom.xml I just had:
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-jdbc</artifactId>
+    <exclusions>
+</dependency>
+```
+
+To exclude Hikari and add the Tomcat CP:
+```xml
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-jdbc</artifactId>
+  <exclusions>
+    <exclusion>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP</artifactId>
+    </exclusion>
+  </exclusions>
+</dependency>
+<dependency>
+  <groupId>org.apache.tomcat</groupId>
+  <artifactId>tomcat-jdbc</artifactId>
+</dependency>
+```
+
+Then I had to change they configuration keys in `application.properties` to use "url" instead of "jdbc-url" as in:
+```
+spring.datasource.url=jdbc:sqlite:./db.sqlite
+```
