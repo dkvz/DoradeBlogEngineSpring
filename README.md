@@ -236,3 +236,69 @@ Then I had to change they configuration keys in `application.properties` to use 
 ```
 spring.datasource.url=jdbc:sqlite:./db.sqlite
 ```
+
+## Copying stats from one DB to the others
+I have to export the table article_stats from db.sqlite to stats.sqlite.
+
+Check and update the table SQLITE_SEQUENCE on stats.sqlite so that "seq" fits on the new table.
+
+This should work:
+```sql
+.mode insert article_stats
+.out article_stats.sql
+select * from article_stats;
+```
+
+Then, on the other database:
+```sql
+.read article_stats.sql
+```
+
+## The poor man's ElasticSearch
+Database modifications to try out full text search.
+
+SQLite has fulltext search capabilities using a specific virtual table.
+
+There are multiple versions of the engine, I'm not sure which one I'm supposed to use according to my DB drivers.
+
+Let's go for version 5 using this article: http://www.sqlitetutorial.net/sqlite-full-text-search/
+
+```sql
+CREATE VIRTUAL TABLE articles_ft USING FTS5(id, title, content);
+```
+
+Now we need to copy the relevant data over to that table. Which effectively means duplicating all the text data + creating all the indexes required for fulltext. It should more than double the size of the database. Which is the main reason why I wanted to move the stats elsewhere.
+
+Dumping the right fields should be easy:
+```sql
+.mode insert articles_ft
+.out ./build/articles_ft.sql
+select id, title, content from articles;
+```
+The table name in the insert statements is correct as well. We can just import the data:
+```sql
+.read ./build/articles_ft.sql
+```
+
+For some reason I had to quit and reload my sqlite3 command line client to be able to select from the articles_ft virtual table.
+
+**We'll have to escape everything we give to the full text engine and more, especially "*" and "+".**
+
+In practice we can now search for multiple tokens like so:
+```sql
+select id, title from articles_ft where articles_ft match 'react webpack' order by rank;
+```
+
+You can go futher and get a chosen snipper of selection (explained [here](https://www.sqlite.org/fts5.html#the_snippet_function)):
+```sql
+select id, title, snippet(articles_ft, 2, '[', ']', '...', 10) from articles_ft where articles_ft match 'react webpack' order by rank;
+```
+
+Which made me realize I probably need to remove all the HTML from the indexed content.
+
+The backend will have to do that and we'll need a script to do it too. Might as well do it in Java.
+
+Stackoverflow post with some cool ideas: https://stackoverflow.com/questions/4432560/remove-html-tags-from-string-using-java/4432579
+
+### Questions
+* Can we update rows in the fulltext table?
