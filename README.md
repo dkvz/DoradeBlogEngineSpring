@@ -37,6 +37,40 @@ Go to the project root directory and run:
 
 The produced jar is "executable". I might change that in the future though.
 
+### Doing it seriously
+I tried building with OpenJDK 11 for target server running OpenJDK 8, and it was working. Except not 100%. For some reason my second datasource was not working at all. But the rest of the app seemed find. So I don't know what was up with that but I ended up creating a container to build the app.
+
+I could also have built it on the server while I'm at it I guess. Oh well...
+
+You need to have all the necessary files for the app in the project root:
+* The GeoIP database
+* db.sqlite
+* stats.sqlite
+* words.txt
+* import directory (empty)
+
+Then if you don't have the image:
+```
+docker build -f build.Dockerfile -t dorade-api-builder .
+```
+
+Now run it and get a shell to it:
+```
+docker run --rm -it docker-api-builder
+```
+
+You should be in a the right directory to run:
+```
+./mvnw package
+```
+
+Now you can copy the target jar to your local computer. I use this command from a second local terminal (find out the container ID using `docker ps`):
+```
+docker cp <containerId>:/usr/src/myapp/target/DoradeBlogEngineSpring-0.0.1-SNAPSHOT.jar ./build/
+```
+
+You can now proceed to deploy that package.
+
 ## Deploying the jar
 I'm still figuring this out as my method using links and systemd has caused a server crash once. Also nobody will read this ever.
 
