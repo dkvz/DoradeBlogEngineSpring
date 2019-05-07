@@ -620,7 +620,7 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 		);
 	}
 
-	private void cleanUpDatabase() throws DataAccessException {
+	public void cleanUpDatabase() throws DataAccessException {
 		jdbcTpl.execute("VACUUM");
 	}
 
@@ -628,16 +628,15 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 	public int rebuildFulltext() throws DataAccessException {
 		// Remove all the content from the table and run VACUUM:
 		jdbcTpl.execute("DELETE FROM articles_ft");
-		this.cleanUpDatabase();
 		String sql = "SELECT id, title, content FROM articles WHERE published = 1 ORDER BY id ASC";
 		List<Map<String, Object>> res = jdbcTpl.queryForList(sql);
 		if (res != null && res.size() > 0) {
 			for (Map<String, Object> row : res) {
 				Article art = new Article();
 				ArticleSummary sum = new ArticleSummary();
-				sum.setId((long)row.get("id"));
+				sum.setId((int)row.get("id"));
 				sum.setTitle((String)row.get("title"));
-				art.setContent((String)row.get("title"));
+				art.setContent((String)row.get("content"));
 				art.setArticleSummary(sum);
 				this.insertArticleFulltext(art);
 			}

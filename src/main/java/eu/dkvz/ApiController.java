@@ -221,16 +221,35 @@ public class ApiController {
 						blogDataAccess.getAllPublishedArticles(0, "DESC")
 					);
 		}
-		// TODO Should actually be a 403 here:
-		throw new BadRequestException();
+		throw new ForbiddenException();
 	}
 
 	@RequestMapping("/rebuild-indexes")
 	@ResponseBody
-	public Map<String, Object> rebuildIndexes() {
-		Map<String, Object> ret = new HashMap<>();
-		ret.put("count", this.blogDataAccess.rebuildFulltext());
-		return ret;
+	public Map<String, Object> rebuildIndexes(HttpServletRequest request) throws Exception {
+		if (Arrays.stream(ApiController.ALLOWED_IP_ADDRESSES).anyMatch(
+			s -> s.equals(IpUtils.getRealIp(request))
+			)) {
+				Map<String, Object> ret = new HashMap<>();
+				if (this.lockImport) {
+					ret.put("status", "error");
+					ret.put("message", "Rebuild already in progress");
+				} else {
+					try {
+						this.lockImport = true;
+						ret.put("count", this.blogDataAccess.rebuildFulltext());
+						this.blogDataAccess.cleanUpDatabase();
+					} finally {
+						// Apparently the DB lock is not released immediately so we
+						// wait for a bit:
+						Thread.sleep(500);
+						this.lockImport = false;
+					}
+				}
+				return ret;
+		} else {
+			throw new ForbiddenException();
+		}
 	}
 	
 	@CrossOrigin(origins = "*")

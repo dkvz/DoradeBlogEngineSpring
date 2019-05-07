@@ -189,7 +189,7 @@ The call is synchronous, when you receive a response from the server, it's done 
 * If the @Transactional annotation really works it should be added to the insertArticle methods in the data access class.
 * It's possible for data in article_stats to concern articles that were deleted - we need to consider that when consuming article_stats and not finding a related entry in the main articles table.
 * I think package names are not supposed to contain uppercase letters. I have a package called BlogAuthoring.
-* getRSS should return a 403 when the requesting IP address is not allowed.
+* Using Exceptions to return HTTP error status seems to produce WARN message in the log. There has to be a better way to do this without creating actual error messages in the log.
 * Add statistics such as the amount of views.
 * The methods inserting stuff into the database could set the inserted id in the Java Bean that was inserted.
 * The way I check for existence of stuff, especially in ArticleImportService, is getting the whole data. I could make more efficient checks.
@@ -305,8 +305,6 @@ Stackoverflow post with some cool ideas: https://stackoverflow.com/questions/443
 
 To the detriment of the size of my jar I chosed to use this JSOUP thing from the [Maven repo](https://mvnrepository.com/artifact/org.jsoup/jsoup).
 
-### Questions
-* Can we update rows in the fulltext table? -> YES
 
 ### To test
 * Test deleting an article with comments, fulltext entry and tags associated
