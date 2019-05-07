@@ -186,6 +186,9 @@ The call is synchronous, when you receive a response from the server, it's done 
 * The spring-boot-devtools dependency is nice but I should check what "optional" means and if it does anything when building to prod.
 * What happens if you don't use an integer in /articles-starting-from/{articleId}?
 * Change the favicon.
+* If the @Transactional annotation really works it should be added to the insertArticle methods in the data access class.
+* It's possible for data in article_stats to concern articles that were deleted - we need to consider that when consuming article_stats and not finding a related entry in the main articles table.
+* I think package names are not supposed to contain uppercase letters. I have a package called BlogAuthoring.
 * getRSS should return a 403 when the requesting IP address is not allowed.
 * Add statistics such as the amount of views.
 * The methods inserting stuff into the database could set the inserted id in the Java Bean that was inserted.
@@ -300,5 +303,10 @@ The backend will have to do that and we'll need a script to do it too. Might as 
 
 Stackoverflow post with some cool ideas: https://stackoverflow.com/questions/4432560/remove-html-tags-from-string-using-java/4432579
 
+To the detriment of the size of my jar I chosed to use this JSOUP thing from the [Maven repo](https://mvnrepository.com/artifact/org.jsoup/jsoup).
+
 ### Questions
-* Can we update rows in the fulltext table?
+* Can we update rows in the fulltext table? -> YES
+
+### To test
+* Test deleting an article with comments, fulltext entry and tags associated

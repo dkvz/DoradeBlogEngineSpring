@@ -65,10 +65,10 @@ public class ApiController {
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping("/")
-    @ResponseBody
-    public String index() {
-    	return "Nothing here";
-    }
+	@ResponseBody
+	public String index() {
+		return "Nothing here";
+	}
 	
 	@CrossOrigin(origins = "*")
 	@RequestMapping("/article/{articleUrl}")
@@ -223,6 +223,14 @@ public class ApiController {
 		}
 		// TODO Should actually be a 403 here:
 		throw new BadRequestException();
+	}
+
+	@RequestMapping("/rebuild-indexes")
+	@ResponseBody
+	public Map<String, Object> rebuildIndexes() {
+		Map<String, Object> ret = new HashMap<>();
+		ret.put("count", this.blogDataAccess.rebuildFulltext());
+		return ret;
 	}
 	
 	@CrossOrigin(origins = "*")

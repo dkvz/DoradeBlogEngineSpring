@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class BlogDataAccessSpring extends BlogDataAccess {
@@ -325,24 +326,24 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 		KeyHolder key = new GeneratedKeyHolder();
 		int res = this.jdbcTpl.update(new PreparedStatementCreator() {
 
-		      @Override
-		      public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
-		        final PreparedStatement ps = connection.prepareStatement(sql, 
-		            Statement.RETURN_GENERATED_KEYS);
-		        ps.setString(1, article.getArticleSummary().getTitle());
-		        ps.setString(2, article.getArticleSummary().getArticleURL());
-		        ps.setString(3, article.getArticleSummary().getThumbImage());
-		        ps.setLong(4, article.getArticleSummary().getDate().getTime() / 1000);
-		        ps.setLong(5, article.getArticleSummary().getUser().getId());
-		        ps.setString(6, article.getArticleSummary().getSummary());
-		        ps.setString(7, article.getContent());
-		        ps.setInt(8, article.getArticleSummary().isPublished() ? 1 : 0);
-		        ps.setInt(9, shortArticle ? 1 : 0);
-		        return ps;
-		      }
+			@Override
+			public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+				final PreparedStatement ps = connection.prepareStatement(sql, 
+						Statement.RETURN_GENERATED_KEYS);
+				ps.setString(1, article.getArticleSummary().getTitle());
+				ps.setString(2, article.getArticleSummary().getArticleURL());
+				ps.setString(3, article.getArticleSummary().getThumbImage());
+				ps.setLong(4, article.getArticleSummary().getDate().getTime() / 1000);
+				ps.setLong(5, article.getArticleSummary().getUser().getId());
+				ps.setString(6, article.getArticleSummary().getSummary());
+				ps.setString(7, article.getContent());
+				ps.setInt(8, article.getArticleSummary().isPublished() ? 1 : 0);
+				ps.setInt(9, shortArticle ? 1 : 0);
+				return ps;
+			}
 		      
-		    }, 
-				key);
+		}, 
+		key);
 		if (res <= 0) return false;
 		// Set the inserted key:
 		article.getArticleSummary().setId(key.getKey().longValue());
@@ -352,6 +353,8 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 		// Which won't check if the tags exist.
 		this.insertTagsForArticle(article.getArticleSummary().getTags(), 
 				article.getArticleSummary().getId());
+		// Add the fulltext entry:
+		this.insertArticleFulltext(article);
 		// At this point always return true. Because we're not
 		// using transactions, remember?
 		return true;
@@ -452,13 +455,32 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 			args.add(article.getArticleSummary().getId());
 			int updt = this.jdbcTpl.update(sql, args.toArray());
 		}
+		// Update the fulltext entry:
+		this.updateArticleFulltext(article);
 		// ON L'APPELLE 
 		// Le booléen qui sert à rien
 		return true;
 	}
 
+	// These methods return booleans for historical reasons.
+	@Transactional
 	public boolean deleteArticleById(long id) throws DataAccessException {
-		return false;
+		// We need to remove associated tags, the fulltext indexes and 
+		// comments.
+		jdbcTpl.update(
+			"DELETE FROM comments WHERE article_id = ?",
+			id
+		);
+		jdbcTpl.update(
+			"DELETE FROM article_tags WHERE article_id = ?",
+			id
+		);
+		this.deleteArticleFulltext(id);
+		int res = jdbcTpl.update(
+			"DELETE FROM articles WHERE id = ?",
+			id
+		);
+		return res > 0;
 	}
 
 	public List<ArticleTag> getTagsForArticle(long id) throws DataAccessException {
@@ -556,16 +578,71 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 		if (stat.getDate() == null) {
 			stat.setDate(new java.util.Date());
 		}
-		jdbcTpl.update(sql,
-				stat.getArticleId(),
-				stat.getPseudoUa(),
-				stat.getPseudoIp(),
-				stat.getGeoInfo().getCountry(),
-				stat.getGeoInfo().getRegion(),
-				stat.getGeoInfo().getCity(),
-				stat.getClientUa(),
-				stat.getClientIp(),
-				stat.getDate().getTime() / 1000);
+		jdbcTpl.update(
+			sql,
+			stat.getArticleId(),
+			stat.getPseudoUa(),
+			stat.getPseudoIp(),
+			stat.getGeoInfo().getCountry(),
+			stat.getGeoInfo().getRegion(),
+			stat.getGeoInfo().getCity(),
+			stat.getClientUa(),
+			stat.getClientIp(),
+			stat.getDate().getTime() / 1000
+		);
+	}
+
+	public void insertArticleFulltext(Article art) throws DataAccessException {
+		// Insert article data into the fulltext database.
+		// Does NOT error if a row with the same ID already exists as 
+		// the FT table can't have keys of any kind.
+		jdbcTpl.update(
+			"INSERT INTO articles_ft (id, title, content) VALUES (?, ?, ?)",
+			art.getArticleSummary().getId(),
+			BlogDataAccess.purifyText(art.getArticleSummary().getTitle()),
+			BlogDataAccess.purifyText(art.getContent())
+		);
+	}
+
+	public void updateArticleFulltext(Article art) throws DataAccessException {
+		jdbcTpl.update(
+			"UPDATE articles_ft SET title = ?, content = ? WHERE id = ?",
+			BlogDataAccess.purifyText(art.getArticleSummary().getTitle()),
+			BlogDataAccess.purifyText(art.getContent()),
+			art.getArticleSummary().getId()
+		);
+	}
+
+	public void deleteArticleFulltext(long id) {
+		jdbcTpl.update(
+			"DELETE FROM articles_ft WHERE id = ?",
+			id
+		);
+	}
+
+	private void cleanUpDatabase() throws DataAccessException {
+		jdbcTpl.execute("VACUUM");
+	}
+
+	@Transactional
+	public int rebuildFulltext() throws DataAccessException {
+		// Remove all the content from the table and run VACUUM:
+		jdbcTpl.execute("DELETE FROM articles_ft");
+		this.cleanUpDatabase();
+		String sql = "SELECT id, title, content FROM articles WHERE published = 1 ORDER BY id ASC";
+		List<Map<String, Object>> res = jdbcTpl.queryForList(sql);
+		if (res != null && res.size() > 0) {
+			for (Map<String, Object> row : res) {
+				Article art = new Article();
+				ArticleSummary sum = new ArticleSummary();
+				sum.setId((long)row.get("id"));
+				sum.setTitle((String)row.get("title"));
+				art.setContent((String)row.get("title"));
+				art.setArticleSummary(sum);
+				this.insertArticleFulltext(art);
+			}
+		}
+		return res.size();
 	}
 	
 }
