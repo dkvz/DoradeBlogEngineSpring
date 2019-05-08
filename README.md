@@ -145,7 +145,7 @@ Will generate URI for "shorts" if the article ID is numeric, otherwise the item 
 Initiates the import from the local import folder on the server.
 
 It's expecting to find JSON files with a format similar to this:
-```
+```json
 {
   "id":35,
   "articleURL":"truc_machin",
@@ -180,6 +180,17 @@ When adding an article, if articleUrl is not present, it automatically becomes a
 Response is uh... I've yet to decide.
 
 The call is synchronous, when you receive a response from the server, it's done adding the data to the database.
+
+#### Deleting articles
+To delete an article, you must provide an article ID and an field called "action" with value 1 or "delete" as in:
+```json
+{
+  "id":35,
+  "action": "delete"
+}
+```
+
+It's probably better to mark articles as unpublished rather than using delete as deleting will effectively remove everything associated with that article including comments.
 
 # TODO
 * I refactored a static method to create order by statements, I need to use it everywhere.
@@ -305,6 +316,3 @@ Stackoverflow post with some cool ideas: https://stackoverflow.com/questions/443
 
 To the detriment of the size of my jar I chosed to use this JSOUP thing from the [Maven repo](https://mvnrepository.com/artifact/org.jsoup/jsoup).
 
-
-### To test
-* Test deleting an article with comments, fulltext entry and tags associated

@@ -152,6 +152,17 @@ public final class JsonDirImporter {
 			if (parsed.get("title") != null) {
 				art.getArticleSummary().setTitle(parsed.get("title").toString());
 			}
+			if (parsed.get("action") != null) {
+				int action = 0;
+				try {
+					action = Integer.parseInt(parsed.get("action").toString());
+				} catch (NumberFormatException ex) {
+					if (parsed.get("action").equals("delete")) {
+						action = 1;
+					}
+				}
+				art.setAction(action);
+			}
 			// We need to check if the tags are an array.
 			if (parsed.get("tags") instanceof List) {
 				// Normally "tags" in ArticleSummary is instantiated by the constructor.

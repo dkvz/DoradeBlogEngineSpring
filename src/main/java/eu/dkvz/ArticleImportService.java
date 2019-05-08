@@ -43,10 +43,10 @@ public class ArticleImportService {
 				if (art.getArticleSummary().getUser() != null && 
 						art.getArticleSummary().getUser().getId() > 0 &&
 						blogDataAccess.getUser(art.getArticleSummary().getUser().getId()) == null) {
-					// User does not exist.
-					art.setError(true);
-					art.setMessage("Provided user does not exist");
-					continue mainLoop;
+							// User does not exist.
+							art.setError(true);
+							art.setMessage("Provided user does not exist");
+							continue mainLoop;
 				}
 				// Check if the tags exist:
 				if (art.getArticleSummary().getTags() != null && art.getArticleSummary().getTags().size() > 0) {
@@ -60,27 +60,41 @@ public class ArticleImportService {
 					}
 				}
 				if (art.getArticleSummary().getId() > 0) {
-					// Updating:
+					// Check the action, we need to delete the article if that's what
+					// was requested:
 					Article existingArt = blogDataAccess.getArticleById(art.getArticleSummary().getId());
+					// Updating or deleting:
 					if (existingArt != null) {
-						// In fact nothing is mandatory here.
-						// Let's have the DB method do most of the work.
-						try {
-							// Check if we're updating the URL and if it already exists:
-							if (art.getArticleSummary().getArticleURL() != null && 
-									!art.getArticleSummary().getArticleURL().equals(existingArt.getArticleSummary().getArticleURL()) &&
-								    blogDataAccess.getArticleByUrl(art.getArticleSummary().getArticleURL()) != null) {
-									// This URL is already in use.
-									art.setError(true);
-									art.setMessage("Provided URL already exists");
-							} else {
-								blogDataAccess.updateArticle(art);
-								art.setMessage("Updated article or short");
+						if (art.getAction() == ImportedArticle.ACTION_DELETE) {
+							try {
+								blogDataAccess.deleteArticleById(art.getArticleSummary().getId());
+								art.setMessage("Delete article or short");
+							} catch (DataAccessException ex) {
+								art.setError(true);
+								art.setMessage("SQL Error deleting article - " + ex.getMessage());
+								ex.printStackTrace();
 							}
-						} catch (DataAccessException ex) {
-							art.setError(true);
-							art.setMessage("SQL Error updating article - " + ex.getMessage());
-							ex.printStackTrace();
+						} else {
+							// Updating the article
+							// In fact nothing is mandatory here.
+							// Let's have the DB method do most of the work.
+							try {
+								// Check if we're updating the URL and if it already exists:
+								if (art.getArticleSummary().getArticleURL() != null && 
+										!art.getArticleSummary().getArticleURL().equals(existingArt.getArticleSummary().getArticleURL()) &&
+											blogDataAccess.getArticleByUrl(art.getArticleSummary().getArticleURL()) != null) {
+										// This URL is already in use.
+										art.setError(true);
+										art.setMessage("Provided URL already exists");
+								} else {
+									blogDataAccess.updateArticle(art);
+									art.setMessage("Updated article or short");
+								}
+							} catch (DataAccessException ex) {
+								art.setError(true);
+								art.setMessage("SQL Error updating article - " + ex.getMessage());
+								ex.printStackTrace();
+							}
 						}
 					} else {
 						art.setError(true);
