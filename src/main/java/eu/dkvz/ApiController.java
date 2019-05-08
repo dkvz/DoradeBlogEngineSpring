@@ -21,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -51,8 +52,10 @@ public class ApiController {
 	public static final String SITE_ARTICLES_ROOT = "articles";
 	public static final String SITE_SHORTS_ROOT = "breves";
 	public static final String SITE_DESCRIPTION = "Blog bizarre d'un humble consultant en progress bars.";
-	
+
 	public boolean lockImport = false;
+
+	private RateLimiter rateLimiter = new RateLimiter();
 	
 	@Autowired
 	public BlogDataAccessSpring blogDataAccess;
@@ -346,6 +349,32 @@ public class ApiController {
 			this.lockImport = false;
 		}
 		return ret;
+	}
+
+	@CrossOrigin(origins = "*")
+	@RequestMapping(value="/articles/search", method=RequestMethod.POST)
+	@ResponseBody
+	public List<Map<String, Object>> searchArticles(@RequestBody Search search) {
+		// Using the rate limiter thingy (which should be a middleware):
+		if (this.rateLimiter.isAllowed()) {
+			// Check if the request body was parsed correctly:
+			if (search != null && search.getInclude() != null) {
+				List<Map<String, Object>> ret = new ArrayList<Map<String, Object>>();
+				Map<String, Object> res = new HashMap<>();
+				// Cleanup the search terms:
+				search.cleanUpIncludes();
+				// Check if we still got search terms:
+				if (!search.getInclude().isEmpty()) {
+					res.put("terms", search.getInclude().toString());
+					ret.add(res);
+				}
+				return ret;
+			} else {
+				throw new BadRequestException();
+			}
+		} else {
+			throw new ForbiddenException("Endpoint disabled due to high load");
+		}
 	}
 	
 	public List<Map<String, Object>> getArticlesOrShortsStartingFrom(long articleId, int max, String tags, String order, boolean isShort) {

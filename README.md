@@ -201,6 +201,7 @@ It's probably better to mark articles as unpublished rather than using delete as
 * It's possible for data in article_stats to concern articles that were deleted - we need to consider that when consuming article_stats and not finding a related entry in the main articles table.
 * I think package names are not supposed to contain uppercase letters. I have a package called BlogAuthoring.
 * Using Exceptions to return HTTP error status seems to produce WARN message in the log. There has to be a better way to do this without creating actual error messages in the log.
+* Add a way to update the fulltext index for a single article (by using /rebuild-indexes/{id}).
 * Add statistics such as the amount of views.
 * The methods inserting stuff into the database could set the inserted id in the Java Bean that was inserted.
 * The way I check for existence of stuff, especially in ArticleImportService, is getting the whole data. I could make more efficient checks.
