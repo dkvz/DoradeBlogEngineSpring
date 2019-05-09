@@ -181,6 +181,37 @@ Response is uh... I've yet to decide.
 
 The call is synchronous, when you receive a response from the server, it's done adding the data to the database.
 
+### POST /articles/search
+Expects a JSON body with an array of search terms as in:
+```json
+{
+  "include": [
+    "searchterm1",
+    "searchterm2"
+  ]
+}
+```
+
+Search is not case sensitive and will treat some characters like "é" and "e" as identical. Spaces, carriage returns and some special characters will be removed from the search terms.
+
+Response is JSON:
+```json
+[
+  {
+    "snippet": " [...] Même si j'ai beaucoup chié sur <b>React</b>, <b>Webpack</b> et npm, je dois avouer que ces technologies sentent désormais comme chez moi, comme quand je mets mon nez dans mon chat (dans ses poils hein) et que je prends une grosse taffe. Morale de l'histoire: L'inconnu fait peur [...] ",
+    "id": 81,
+    "title": "Capricartes - Version Alpha",
+    "articleURL": "81"
+  },
+  {
+    "snippet": " [...] Voyez cet article pour les explications officielles de cache busting avec <b>Webpack</b> et le plugin HTML. Il me semble que VueJS et <b>React</b> fonctionnent de cette manière par défaut si vous les utilisez avec <b>Webpack</b>. Pas d'inquiétude de ce côté là donc. Au niveau de Polymer, il n'y [...] ",
+    "id": 68,
+    "title": "Cache Busting pour Polymer 2.0 et Apache",
+    "articleURL": "cache_busting_polymer_2_apache"
+  }
+]
+```
+
 #### Deleting articles
 To delete an article, you must provide an article ID and an field called "action" with value 1 or "delete" as in:
 ```json
@@ -195,9 +226,8 @@ It's probably better to mark articles as unpublished rather than using delete as
 # TODO
 * I refactored a static method to create order by statements, I need to use it everywhere.
 * The spring-boot-devtools dependency is nice but I should check what "optional" means and if it does anything when building to prod.
-* What happens if you don't use an integer in /articles-starting-from/{articleId}?
 * Change the favicon.
-* If the @Transactional annotation really works it should be added to the insertArticle methods in the data access class.
+* The @Transactional annotation really works it should be added to the insertArticle methods in the data access class. I think it works.
 * It's possible for data in article_stats to concern articles that were deleted - we need to consider that when consuming article_stats and not finding a related entry in the main articles table.
 * I think package names are not supposed to contain uppercase letters. I have a package called BlogAuthoring.
 * Using Exceptions to return HTTP error status seems to produce WARN message in the log. There has to be a better way to do this without creating actual error messages in the log.
