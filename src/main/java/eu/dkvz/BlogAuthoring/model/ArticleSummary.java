@@ -117,6 +117,18 @@ public class ArticleSummary {
         return res;
     }
 
+    public Map<String, Object> toSearchMap() {
+		Map<String, Object> res = new HashMap<>();
+        res.put("id", this.getId());
+        res.put("title", this.getTitle());
+        res.put("articleURL", 
+            this.getArticleURL() != null ? 
+                this.getArticleURL() : Long.toString(this.getId())
+        );
+		res.put("snippet", this.getSummary());
+		return res;
+	}
+
     /**
      * @return the user
      */

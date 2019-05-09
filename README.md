@@ -306,7 +306,7 @@ select id, title from articles_ft where articles_ft match 'react webpack' order 
 
 You can go futher and get a chosen snipper of selection (explained [here](https://www.sqlite.org/fts5.html#the_snippet_function)):
 ```sql
-select id, title, snippet(articles_ft, 2, '[', ']', '...', 10) from articles_ft where articles_ft match 'react webpack' order by rank;
+select articles_ft.id, articles_ft.title, snippet(articles_ft, 2, '<b>', '</b>', ' [...] ', 50) from articles_ft, articles where articles_ft match 'react webpack' and articles.id = articles_ft.id and articles.published = 1 order by rank;
 ```
 
 Which made me realize I probably need to remove all the HTML from the indexed content.

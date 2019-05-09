@@ -360,13 +360,12 @@ public class ApiController {
 			// Check if the request body was parsed correctly:
 			if (search != null && search.getInclude() != null) {
 				List<Map<String, Object>> ret = new ArrayList<Map<String, Object>>();
-				Map<String, Object> res = new HashMap<>();
 				// Cleanup the search terms:
 				search.cleanUpIncludes();
 				// Check if we still got search terms:
 				if (!search.getInclude().isEmpty()) {
-					res.put("terms", search.getInclude().toString());
-					ret.add(res);
+					List<ArticleSummary> searches = this.blogDataAccess.fulltextSearchPublishedArticles(search);
+					searches.forEach(s -> ret.add(s.toSearchMap()));
 				}
 				return ret;
 			} else {

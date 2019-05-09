@@ -643,5 +643,23 @@ public class BlogDataAccessSpring extends BlogDataAccess {
 		}
 		return res.size();
 	}
+
+	public List<ArticleSummary> fulltextSearchPublishedArticles(Search search) throws DataAccessException {
+		// I added an arbitrary limit to the query.
+		String sql = "SELECT articles_ft.id, articles_ft.title, articles.article_url, snippet(articles_ft, 2, '<b>', '</b>', ' [...] ', 50) AS snippet FROM articles_ft, articles WHERE articles_ft MATCH ? and articles.id = articles_ft.id and articles.published = 1 ORDER BY rank LIMIT 15";
+		List<ArticleSummary> ret = new ArrayList<>();
+		List<Map<String, Object>> arts = jdbcTpl.queryForList(sql, search.toQueryString());
+		arts.forEach(a -> {
+			ArticleSummary sum = new ArticleSummary();
+			sum.setId((int)a.get("id"));
+			sum.setTitle((String)a.get("title"));
+			if (a.get("article_url") != null) {
+				sum.setArticleURL((String)a.get("article_url"));
+			}
+			sum.setSummary((String)a.get("snippet"));
+			ret.add(sum);
+		});
+		return ret;
+	}
 	
 }

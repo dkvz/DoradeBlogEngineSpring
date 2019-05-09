@@ -34,4 +34,8 @@ public class Search {
     this.include = terms;
   }
 
+  public String toQueryString() {
+    return String.join(" ", this.include);
+  }
+
 }
