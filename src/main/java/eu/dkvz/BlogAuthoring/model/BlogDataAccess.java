@@ -15,7 +15,7 @@ public class BlogDataAccess {
 	 * @return The purified text
 	 */
 	protected static String purifyText(String text) {
-		return Jsoup.parse(text).text();
+		return Jsoup.parse(text).text().replace("<", "&lt;").replace(">", "&gt;");
 	}
 	
 }

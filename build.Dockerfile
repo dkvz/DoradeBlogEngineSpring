@@ -1,4 +1,5 @@
 # The plan is to build this image
+# docker build -t dorade-api-builder -f build.Dockerfile .
 # Run it, with --rm -it
 # Build the app with ./mvnw package
 # Copy the target build from the running container:
