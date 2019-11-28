@@ -6,6 +6,12 @@ For some reasons it's completely independent from the actual web site and even r
 ## Open the project
 It's best to use the Spring Tool Suite. Clone the repository and import the folder in SpringToolSuite.
 
+## Running the project
+To run the project from command line, you can use:
+```
+./mvnw spring-boot:run
+```
+
 ## The database
 I may not have included the SQLite database. Project won't work without it.
 
