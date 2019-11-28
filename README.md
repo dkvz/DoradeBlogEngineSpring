@@ -113,6 +113,10 @@ Args:
 ### GET /shorts-starting-from/:articleId
 Same endpoint as above but for shorts.
 
+Also has a `content` arg that takes a boolean value. Default is true.
+
+I used to fetch shorts including their content but that caused a host of issues. The refactor to include the content arg is extremely ugly. I justify it by the fact that I'm supposed to completely retire this backend in the future.
+
 ### GET /article/:articleUrl
 I'm going to return a 404 if it doesn't exist but I'm not sure what was happening with the other service.
 

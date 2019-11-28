@@ -143,7 +143,7 @@ public class ApiController {
 			@RequestParam(value="max", defaultValue="30") int max,
 			@RequestParam(value="tags", defaultValue="") String tags,
 			@RequestParam(value="order", defaultValue="desc") String order) {
-    	return this.getArticlesOrShortsStartingFrom(articleId, max, tags, order, false);
+    	return this.getArticlesOrShortsStartingFrom(articleId, max, tags, order, false, true);
 	}
 	
 	@CrossOrigin(origins = "*")
@@ -152,8 +152,9 @@ public class ApiController {
 	public List<Map<String, Object>> shortsStartingFrom(@PathVariable long articleId,
 			@RequestParam(value="max", defaultValue="30") int max,
 			@RequestParam(value="tags", defaultValue="") String tags,
-			@RequestParam(value="order", defaultValue="desc") String order) {
-    	return this.getArticlesOrShortsStartingFrom(articleId, max, tags, order, true);
+			@RequestParam(value="order", defaultValue="desc") String order,
+			@RequestParam(value="content", defaultValue="true") boolean showContent) {
+    	return this.getArticlesOrShortsStartingFrom(articleId, max, tags, order, true, showContent);
 	}
 	
 	@CrossOrigin(origins = "*")
@@ -188,7 +189,7 @@ public class ApiController {
 	@RequestMapping(value="/gimme-sitemap", produces="application/xml")
 	@ResponseBody
 	public String getSitemap(@RequestParam(value="articlesRoot", defaultValue="dkvz.eu/articles") String articlesRoot) {
-		List<ArticleSummary> articles = blogDataAccess.getArticleSummariesDescFromTo(0, Integer.MAX_VALUE, "", "desc");
+		List<ArticleSummary> articles = blogDataAccess.getArticleSummariesDescFromTo(0, Integer.MAX_VALUE, "", "desc", false);
 		List<Article> shorts = blogDataAccess.getShortsDescFromTo(0, Integer.MAX_VALUE, "", "desc");
 		String sitemap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 		sitemap = sitemap.concat("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
@@ -376,30 +377,34 @@ public class ApiController {
 		}
 	}
 	
-	public List<Map<String, Object>> getArticlesOrShortsStartingFrom(long articleId, int max, String tags, String order, boolean isShort) {
+	public List<Map<String, Object>> getArticlesOrShortsStartingFrom(long articleId, int max, String tags, String order, boolean isShort, boolean withContent) {
 		if (max > 100) {
-    		max = 30;
-    	}
-    	try {
-    		long count = blogDataAccess.getArticleCount(true, false, tags);
-    		if (articleId >= count) {
-        		throw new NotFoundException();
+			max = 30;
+		}
+		try {
+			long count = blogDataAccess.getArticleCount(true, false, tags);
+			if (articleId >= count) {
+				throw new NotFoundException();
 			} else {
 				List<Map<String, Object>> ret = new ArrayList<>();
 				// I could make an interface of stuff that have "toMap" and use that.
-				if (isShort) {
+				// This is super ugly lol
+				if (isShort && withContent) {
 					List<Article> sums = blogDataAccess.getShortsDescFromTo(articleId, max, tags, order);
 					sums.forEach(i -> ret.add(i.toMap()));
+				} else if (isShort && !withContent) {
+					List<ArticleSummary> sums = blogDataAccess.getArticleSummariesDescFromTo(articleId, max, tags, order, true);
+					sums.forEach(i -> ret.add(i.toMap()));
 				} else {
-					List<ArticleSummary> sums = blogDataAccess.getArticleSummariesDescFromTo(articleId, max, tags, order);
+					List<ArticleSummary> sums = blogDataAccess.getArticleSummariesDescFromTo(articleId, max, tags, order, false);
 					sums.forEach(i -> ret.add(i.toMap()));
 				}
 				return ret;
 			}
-    	} catch (DataAccessException ex) {
-    		System.err.println(ex);
-    		throw ex;
-    	}
+		} catch (DataAccessException ex) {
+			System.err.println(ex);
+			throw ex;
+		}
 	}
 	
 	@ExceptionHandler
